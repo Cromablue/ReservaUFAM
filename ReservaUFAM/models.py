@@ -13,7 +13,7 @@ class UserProfile(models.Model):
     name = models.CharField(max_length=50)
     cellphone = models.CharField(max_length=11, unique=True)
     cpf = models.CharField(max_length=11, unique=True)
-    siap = models.CharField(max_length=11, unique=True)
+    siap = models.CharField(max_length=7, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
 
     def __str__(self):
