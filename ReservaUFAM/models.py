@@ -3,18 +3,18 @@ from django.contrib.auth.models import User
 
 
 class UserProfile(models.Model):
-    STATUS_CHOICES = (
-        ('pendente', 'Pendente'),
-        ('confirmado', 'Confirmado'),
-        ('rejeitado', 'Rejeitado'),
-    )
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    name = models.CharField(max_length=50)
-    cellphone = models.CharField(max_length=11, unique=True)
-    cpf = models.CharField(max_length=11, unique=True)
-    siap = models.CharField(max_length=7, unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+    siape = models.CharField(max_length=7, unique=True)
+    CPF = models.CharField(max_length=11, unique=True)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    cellphone = models.CharField(max_length=15)
+    password = models.CharField(max_length=12)
+    STATUS_CHOICES = [
+        ('Pendente', 'Pendente'),
+        ('Aprovado', 'Aprovado'),
+        ('Reprovado', 'Reprovado'),
+    ]
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pendente')
 
     def __str__(self):
         return self.name
