@@ -10,8 +10,9 @@
 <body>
     <nav class="navbar navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="#">Reservation System</a>
+            <a class="navbar-brand" href="{% url 'home' %}">Reservation System</a>
         </div>
+        <div> <a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a> | <a href="{% url 'admin:index' %}">Admin"></a> | <a href="{% url 'logout' %}">Sair</a></div>
     </nav>
     <div class="container mt-4">
         {% block content %}{% endblock %}
