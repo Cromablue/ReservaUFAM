@@ -1,7 +1,7 @@
 from .models import UserProfile
 from django import forms
 
-class UsuarioForm(forms.ModelForm):
+class UserForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ['SIAPE', 'CPF', 'nome', 'email', 'telefone', 'senha']
