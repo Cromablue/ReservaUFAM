@@ -11,3 +11,8 @@ class UserForm(forms.ModelForm):
         if len(senha) < 8 or len(senha) > 12:
             raise forms.ValidationError("A senha deve ter entre 8 e 12 caracteres.")
         return senha
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
