@@ -1,6 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+#class to admin add alowed users, and they can have yours register aproved without wait to admin aproval
+class AllowedUser(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    siape = models.CharField(max_length=7, unique=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     siape = models.CharField(max_length=7, unique=True, null=False)
