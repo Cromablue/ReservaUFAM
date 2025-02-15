@@ -1,5 +1,19 @@
-from .models import UserProfile
+from .models import UserProfile, AllowedUser
 from django import forms
+
+
+class AllowedUserForm(forms.ModelForm):
+    class Meta:
+        model = AllowedUser
+        fields = ['siape', 'name']
+
+    def clean_siape(self):
+        siape = self.cleaned_data.get("siape")
+        if len(siape) != 7:
+            raise forms.ValidationError("O SIAPE deve ter 7 dígitos.")
+        return siape
+
+
 
 class UserForm(forms.ModelForm):
     class Meta:
