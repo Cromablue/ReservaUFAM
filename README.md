@@ -29,8 +29,8 @@ Antes de começar, certifique-se de ter instalado:
 ### 🔧 Instalação e Execução  
 1. Clone o repositório:  
    ```bash
-   git clone https://github.com/seu-usuario/sistema-reservas.git
-   cd sistema-reservas
+   git clone https://github.com/Cromablue/ReservaUFAM.git
+   cd ReservaUFAM
    ```
 
 2. Inicie o ambiente:  
