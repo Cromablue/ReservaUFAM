@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:14
+    volumes:
+      - django_postgres:/var/lib/postgresql/data    # Corrigido: nome do volume e sintaxe
+    environment:
+      POSTGRES_DB: reserve_database
+      POSTGRES_USER: reserve_user
+      POSTGRES_PASSWORD: reserve_password
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+
+  app:
+    build: 
+      context: .
+    container_name: reservasufam
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    command: >
+      sh -c "python manage.py wait_for_db &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - LOGLEVEL=${LOGLEVEL}
+      - DB_ENGINE=${DB_ENGINE}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+volumes:
+  django_postgres:  
