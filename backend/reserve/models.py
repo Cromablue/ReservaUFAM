@@ -47,3 +47,12 @@ class Auditorium(models.Model):
     
     def __str__(self):
         return self.name
+    
+# Model for Meeting Rooms
+class MeetingRoom(models.Model):
+    name = models.CharField(max_length=100, unique=True)  # Unique meeting room name
+    capacity = models.IntegerField()  # Seating capacity
+    location = models.CharField(max_length=255)  # Location description
+    
+    def __str__(self):
+        return self.name
