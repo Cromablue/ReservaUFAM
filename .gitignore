@@ -139,7 +139,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env Comentado para que o arquivo seja visualizado pelos desenvolvedores
 .venv
 env/
 venv/
