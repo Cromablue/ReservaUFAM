@@ -7,6 +7,9 @@ COPY requirements.txt /app/
 
 RUN pip install --no-cache-dir -r requirements.txt  
 
+# Instala o cliente do PostgreSQL
+RUN apt-get update && apt-get install -y postgresql-client
+
 COPY . /app/
 
 EXPOSE 8000  
