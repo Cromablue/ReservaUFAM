@@ -38,3 +38,12 @@ class AdminProfile(models.Model):
 
     def __str__(self):
         return self.name  # Returns the administrator's name when printing the object
+    
+# Model for Auditoriums
+class Auditorium(models.Model):
+    name = models.CharField(max_length=100, unique=True)  # Unique auditorium name
+    capacity = models.IntegerField()  # Seating capacity
+    location = models.CharField(max_length=255)  # Location description
+    
+    def __str__(self):
+        return self.name
