@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Expõe a porta do servidor do frontend
-EXPOSE 5173
+EXPOSE 5174
 
 # Comando para rodar a aplicação no vite
 CMD ["npm", "run", "dev"]
