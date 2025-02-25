@@ -24,3 +24,17 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.name  # Returns the user's name when printing the object
+    
+    # Model to store administrator information
+class AdminProfile(models.Model):
+    # One-to-one relationship with Django's default User model
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin_profile')
+    
+    # Administrator details
+    name = models.CharField(max_length=50)  # Full name
+    cellphone = models.CharField(max_length=11, unique=True)  # Unique phone number
+    cpf = models.CharField(max_length=11, unique=True)  # Unique CPF
+    siape = models.CharField(max_length=7, unique=True)  # Unique SIAPE
+
+    def __str__(self):
+        return self.name  # Returns the administrator's name when printing the object
