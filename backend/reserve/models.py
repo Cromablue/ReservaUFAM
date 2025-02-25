@@ -56,3 +56,12 @@ class MeetingRoom(models.Model):
     
     def __str__(self):
         return self.name
+    
+# Model for Vehicles
+class Vehicle(models.Model):
+    plate_number = models.CharField(max_length=10, unique=True)  # Unique vehicle plate number
+    model = models.CharField(max_length=100)  # Vehicle model
+    capacity = models.IntegerField()  # Passenger capacity
+    
+    def __str__(self):
+        return f"{self.model} - {self.plate_number}"
