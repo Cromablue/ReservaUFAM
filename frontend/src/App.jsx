@@ -1,7 +1,4 @@
-import { use } from "react";
-import AddTasks from "./components/AddTasks"
-import Tasks from "./components/Tasks"
-import { useEffect,useState } from 'react';
+
 import Header from "./components/Header";
 import Main from "./components/Main";
 import Loader from "./components/Loader";
@@ -17,6 +14,7 @@ const App = () => {
         <Login/>
         <Loader/>
         <Error/>
+        
       </Main>
     </div>
   )
