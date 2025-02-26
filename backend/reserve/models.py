@@ -85,7 +85,8 @@ class Reservation(models.Model):
     final_time = models.TimeField()  # End time
     description = models.TextField()  # Activity description
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendente')  # Reservation status
-    
+    is_deleted = models.BooleanField(default=False)  # fild to use when someone delete the reservation, to didn't lost it
+
     # Foreign keys for different reservable items (optional, one should be filled)
     auditorium = models.ForeignKey(Auditorium, on_delete=models.SET_NULL, null=True, blank=True)
     meeting_room = models.ForeignKey(MeetingRoom, on_delete=models.SET_NULL, null=True, blank=True)
