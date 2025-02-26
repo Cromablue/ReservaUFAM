@@ -36,3 +36,9 @@ class AuditoriumForm(forms.ModelForm):
     class Meta:
         model = Auditorium
         fields = ['name', 'capacity', 'location']
+
+# Meeting Room Form
+class MeetingRoomForm(forms.ModelForm):
+    class Meta:
+        model = MeetingRoom
+        fields = ['name', 'capacity', 'location']
