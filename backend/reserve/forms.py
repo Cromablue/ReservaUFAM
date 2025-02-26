@@ -42,3 +42,9 @@ class MeetingRoomForm(forms.ModelForm):
     class Meta:
         model = MeetingRoom
         fields = ['name', 'capacity', 'location']
+
+# Vehicle Form
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['plate_number', 'model', 'capacity']
