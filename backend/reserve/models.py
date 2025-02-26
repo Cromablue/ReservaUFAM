@@ -51,29 +51,24 @@ class Vehicle(models.Model):
     
 # Model to store reservations
 class Reservation(models.Model):
-    # Possible reservation statuses
-    STATUS_CHOICES = (
-        ('Pendente', 'Pending'),
-        ('Confirmado', 'Confirmed'),
-        ('Cancelado', 'Canceled'),
-    )
-
-    # Relationship with the user making the reservation
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations')
+    class Status(models.TextChoices):
+        PENDING = "Pendente", "Pending"
+        CONFIRMED = "Confirmado", "Confirmed"
+        CANCELED = "Cancelado", "Canceled"
     
-    # Reservation details
-    initial_date = models.DateField()  # Reservation start date
-    final_date = models.DateField()  # Reservation end date
-    initial_time = models.TimeField()  # Start time
-    final_time = models.TimeField()  # End time
-    description = models.TextField()  # Activity description
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendente')  # Reservation status
-    is_deleted = models.BooleanField(default=False)  # fild to use when someone delete the reservation, to didn't lost it
-
-    # Foreign keys for different reservable items (optional, one should be filled)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reservations")
+    initial_date = models.DateField()
+    final_date = models.DateField()
+    initial_time = models.TimeField()
+    final_time = models.TimeField()
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    is_deleted = models.BooleanField(default=False)
+    
+    # Foreign keys for different reservable items (only one should be filled)
     auditorium = models.ForeignKey(Auditorium, on_delete=models.SET_NULL, null=True, blank=True)
     meeting_room = models.ForeignKey(MeetingRoom, on_delete=models.SET_NULL, null=True, blank=True)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):
-        return f"Reservation by {self.user.username} ({self.status})"
+        return f"Reservation by {self.user.get_full_name()} ({self.status})"
