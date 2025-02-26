@@ -34,17 +34,19 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware", # conectar com o frontend
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware", # conectar com o frontend
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", # para testar o react localmente
-    "http://frontend:5173", # Nome do serviço no Docker Compose
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://reservaufam_frontend:5173", # Nome do serviço no Docker Compose
 ]
 
 ROOT_URLCONF = "setup.urls"
