@@ -31,3 +31,8 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = ['name', 'email', 'cellphone', 'cpf', 'siape', 'password']
 
+# Auditorium Form
+class AuditoriumForm(forms.ModelForm):
+    class Meta:
+        model = Auditorium
+        fields = ['name', 'capacity', 'location']
