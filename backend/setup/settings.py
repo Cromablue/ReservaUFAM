@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "reserve",
     "corsheaders", # conectar com o frontend
+    "rest_framework", #atualizar o django pra rest
 ]
 
 MIDDLEWARE = [
