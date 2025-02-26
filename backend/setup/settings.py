@@ -43,8 +43,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080", # para testar o react localmente
-    "http://frontend:8080", # Nome do serviço no Docker Compose
+    "http://localhost:5173", # para testar o react localmente
+    "http://frontend:5173", # Nome do serviço no Docker Compose
 ]
 
 ROOT_URLCONF = "setup.urls"
