@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.contrib.auth import authenticate
 from django.core.exceptions import PermissionDenied
 from rest_framework import generics, permissions, status
@@ -14,7 +15,7 @@ from .serializers import (
 )
 
 def index(request):
-    return render(request, 'index.html')
+    return JsonResponse({'message': 'Ola do Django!'})
 
 # Painel do administrador para gerenciar auditórios
 class AuditoriumAdminView(generics.ListCreateAPIView):
@@ -68,11 +69,9 @@ class LoginView(APIView):
         password = request.data.get('password')
         user = authenticate(username=username, password=password)
         if user and user.is_active:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token)
-            }, status=status.HTTP_200_OK)
+            # Aqui usamos o token simples
+            token, created = obtain_auth_token(request)
+            return Response({"token": token.key}, status=status.HTTP_200_OK)
         raise ValidationError("Credenciais inválidas ou usuário inativo.")
 
 # Listagem de reservas para administradores

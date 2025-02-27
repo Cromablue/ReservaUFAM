@@ -1,24 +1,32 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedPage from "./components/ProtectedPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Home from "./pages/Home";
+import CreateReservation from "./pages/CreateReservation";
+import AdminReservations from "./pages/AdminReservations";
+import UpdateReservationStatus from "./pages/UpdateReservationStatus";
+import UserReservations from "./pages/UserReservations";
+import CancelReservation from "./pages/CancelReservation";
 
-import Header from "./components/Header";
-import Main from "./components/Main";
-import Loader from "./components/Loader";
-import Error from "./components/Error";
-import Login from "./components/Login";
+const router = createBrowserRouter([
+  { path: "/", element: <Login /> },
+  { path: "/register", element: <Register /> },
+  { path: "/home", element: <ProtectedPage><Home /></ProtectedPage> },
+  { path: "/reservations/create", element: <ProtectedPage><CreateReservation /></ProtectedPage> },
+  { path: "/admin/reservations", element: <ProtectedPage><AdminReservations /></ProtectedPage> },
+  { path: "/admin/reservations/:id/status", element: <ProtectedPage><UpdateReservationStatus /></ProtectedPage> },
+  { path: "/user/reservations", element: <ProtectedPage><UserReservations /></ProtectedPage> },
+  { path: "/user/reservations/:id/cancel", element: <ProtectedPage><CancelReservation /></ProtectedPage> }
+]);
 
 const App = () => {
-  console.log({ Header, Main, Loader, Error });
   return (
-    <div className="app">
-      <Header/>
-      <Main>
-        <Login/>
-        <Loader/>
-        <Error/>
-        
-      </Main>
-    </div>
-  )
-}
-export default App
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
+};
 
-
+export default App;

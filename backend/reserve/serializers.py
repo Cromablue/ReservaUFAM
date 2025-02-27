@@ -19,7 +19,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
                 setattr(instance, attr, value)
         instance.save()
         return instance
-    
+
 class AuditoriumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Auditorium
@@ -49,13 +49,17 @@ class ReservationSerializer(serializers.ModelSerializer):
         selected_resources = [data.get('auditorium'), data.get('meeting_room'), data.get('vehicle')]
         if sum(bool(resource) for resource in selected_resources) != 1:
             raise serializers.ValidationError("You must select exactly one resource (Auditorium, Meeting Room, or Vehicle).")
-        
+
         initial_date = data.get('initial_date')
         final_date = data.get('final_date')
         initial_time = data.get('initial_time')
         final_time = data.get('final_time')
+
+        if initial_date > final_date:
+            raise serializers.ValidationError("Initial date must be before final date.")
+
         resource_filters = {k: v for k, v in data.items() if k in ['auditorium', 'meeting_room', 'vehicle'] and v}
-        
+
         if Reservation.objects.filter(
             initial_date=initial_date,
             final_date=final_date,
@@ -64,5 +68,5 @@ class ReservationSerializer(serializers.ModelSerializer):
             **resource_filters
         ).exists():
             raise serializers.ValidationError("This resource is already booked for the selected date and time.")
-        
+
         return data

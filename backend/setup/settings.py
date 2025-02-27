@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = bool(os.environ.get("DEBUG", False))
 
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '').split(',')
 
@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "reserve",
     "corsheaders", # conectar com o frontend
     "rest_framework", #atualizar o django pra rest
+    "rest_framework.authtoken",
 ]
 
 # Configuração do Django Rest Framework (DRF)
@@ -58,12 +59,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # para testar o react localmente
-    "http://localhost:5174",
-    "http://localhost:5175",
-    "http://reservaufam_frontend:5173", # Nome do serviço no Docker Compose
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "setup.urls"
 

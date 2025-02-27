@@ -8,8 +8,8 @@ class CustomUser(AbstractUser):
         TECHNICIAN = "TECHNICIAN", "Technician"
     
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.TECHNICIAN)
-    siape = models.CharField(max_length=7, unique=True, null=False)
-    cpf = models.CharField(max_length=11, unique=True, null=False)
+    siape = models.CharField(max_length=7, unique=True)
+    cpf = models.CharField(max_length=11, unique=True)
     cellphone = models.CharField(max_length=15, null=True, blank=True)
 
     STATUS_CHOICES = [
@@ -22,12 +22,12 @@ class CustomUser(AbstractUser):
     # Adicionando related_name para evitar conflitos
     groups = models.ManyToManyField(
         Group,
-        related_name='customuser_set',  # Relacionamento reverso único
+        related_name='customuser_set', 
         blank=True
     )
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name='customuser_set',  # Relacionamento reverso único
+        related_name='customuser_set',  
         blank=True
     )
 

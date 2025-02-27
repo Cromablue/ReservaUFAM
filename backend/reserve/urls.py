@@ -9,6 +9,7 @@ from .views import (
     UserReservationListView,
     CancelReservationView,
 )
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     # Home
@@ -17,9 +18,9 @@ urlpatterns = [
     # Cadastro de usuário
     path('register/', RegisterView.as_view(), name='register'),
     
-    # Login de usuário
-    path('login/', LoginView.as_view(), name='login'),
-    
+    # Login de usuário (token)
+    path('api/auth/token/login/', obtain_auth_token, name='token-login'),
+
     # Solicitação de reserva
     path('reservations/create/', CreateReservationView.as_view(), name='create-reservation'),
     

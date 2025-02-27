@@ -1,12 +1,16 @@
 import React from "react";
 import logo from "../assets/logo.png";
 const Login = () => {
+  const handleLogin = (e) => {
+    e.preventDefault();
+    console.log("Login realizado");
+  };
   return (
     <section className="flex items-center justify-center flex-col gap-4">
             <img src={logo} alt="logo" className="w-26 h-20" />
           {/* <!-- Right column container with form --> */}
           <div className="border-2 border-gray-300 rounded-md p-4 w-60 h-60">
-            <form>
+            <form onSubmit={handleLogin}>
               {/* <!-- Email input --> */}
               <label htmlFor="siape">SIAPE: </label>
               <input
@@ -46,7 +50,7 @@ const Login = () => {
               {/* <!-- Submit button --> */}
               <div className="flex items-center justify-center">
                 <button
-                  type="button"
+                  type="submit"
                   className="bg-green-600 text-white px-4 py-2 rounded-md items-center justify-center"
                 >
                   Entrar
