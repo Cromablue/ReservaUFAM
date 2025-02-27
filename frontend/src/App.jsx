@@ -12,6 +12,11 @@ import AdminReservations from "./pages/AdminReservations";
 import UpdateReservationStatus from "./pages/UpdateReservationStatus";
 import UserReservations from "./pages/UserReservations";
 import CancelReservation from "./pages/CancelReservation";
+import AdminPage from "./pages/AdminPage";
+import AdminUsuarios from "./pages/AdminUsuarios";
+import AdminRecursos from "./pages/AdminRecursos";
+
+
 import ErrorPopup from "./components/ErrorPopup";
 import {ErrorBoundary} from "react-error-boundary";
 import { useState } from "react";
@@ -26,8 +31,12 @@ const protectedElement = (Component) => (
 );
 
 const router = createBrowserRouter([
+
   { path: "/", element: <Main><Login /></Main> },
   { path: "/register", element: <Main><Register /></Main> },
+  { path: "/admin/page", element: <AdminPage/>},
+  { path: "/admin/users", element: <AdminUsuarios/>},
+  { path: "/admin/recursos", element: <AdminRecursos/>},
   { path: "/home", element: protectedElement(Home) },
   { path: "/reservations/create", element: protectedElement(CreateReservation) },
   { path: "/admin/reservations", element: protectedElement(AdminReservations) },
