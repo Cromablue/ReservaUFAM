@@ -4,31 +4,49 @@ from .models import CustomUser, Auditorium, MeetingRoom, Vehicle, Reservation
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'siape', 'cpf', 'cellphone', 'status']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'username', 'email', 'siape', 'role', 'cpf', 'cellphone', 'status']
+        read_only_fields = ['id', 'email']  # Evita editar campos como id e email diretamente
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
+class LoginSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
-    def update(self, instance, validated_data):
-        for attr, value in validated_data.items():
-            if attr == 'password':
-                instance.set_password(value)
-            else:
-                setattr(instance, attr, value)
-        instance.save()
-        return instance
+    def get_user(self, identifier):
+        return CustomUser.objects.filter(
+            Q(username=identifier) | Q(email=identifier) | Q(siape=identifier)
+        ).first()
+
+    def validate(self, attrs):
+        identifier = attrs.get('identifier')
+        password = attrs.get('password')
+
+        user = self.get_user(identifier)
+
+        if not user or not user.check_password(password):
+            raise serializers.ValidationError(_('Invalid credentials or user not found'))
+
+        attrs['user'] = user
+        return attrs
 
 class AuditoriumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Auditorium
         fields = ['id', 'name', 'capacity', 'location']
 
+    def validate_location(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Location cannot be empty.")
+        return value
+
 class MeetingRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeetingRoom
         fields = ['id', 'name', 'capacity', 'location']
+
+    def validate_location(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Location cannot be empty.")
+        return value
 
 class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,6 +65,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         selected_resources = [data.get('auditorium'), data.get('meeting_room'), data.get('vehicle')]
+        
         if sum(bool(resource) for resource in selected_resources) != 1:
             raise serializers.ValidationError("You must select exactly one resource (Auditorium, Meeting Room, or Vehicle).")
 
@@ -58,8 +77,12 @@ class ReservationSerializer(serializers.ModelSerializer):
         if initial_date > final_date:
             raise serializers.ValidationError("Initial date must be before final date.")
 
+        if initial_date == final_date and initial_time >= final_time:
+            raise serializers.ValidationError("Initial time must be before final time on the same day.")
+
         resource_filters = {k: v for k, v in data.items() if k in ['auditorium', 'meeting_room', 'vehicle'] and v}
 
+        # Melhorando a consulta, considerando que as datas e horários já foram validados
         if Reservation.objects.filter(
             initial_date=initial_date,
             final_date=final_date,

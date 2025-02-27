@@ -20,7 +20,7 @@ const Register = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/register/", {
+      const response = await fetch("http://localhost:8000/api/register/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +49,7 @@ const Register = () => {
 
   return (
     <section className="flex items-center justify-center flex-col gap-4">
-      <img src={logo} alt="logo" className="w-26 h-20" />
+      <img src={logo} alt="logo" className="w-17 h-12" />
       <div className="text-2xl">Cadastro</div>
 
       {/* Formulário de Cadastro */}
