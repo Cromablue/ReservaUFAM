@@ -12,6 +12,9 @@ import AdminReservations from "./pages/AdminReservations";
 import UpdateReservationStatus from "./pages/UpdateReservationStatus";
 import UserReservations from "./pages/UserReservations";
 import CancelReservation from "./pages/CancelReservation";
+import ErrorPopup from "./components/ErrorPopup";
+import {ErrorBoundary} from "react-error-boundary";
+import { useState } from "react";
 
 const protectedElement = (Component) => (
   <ProtectedPage>
@@ -34,10 +37,27 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
+  const [error, setError] = useState(null);
+  const [showError, setShowError] = useState(false);
+
+  const handleError = (error) => {
+    setError(error);
+    setShowError(true);
+  };
+  const handleCloseError = () => {
+    setShowError(false);
+  };
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <div>
+      {showError && (
+        <ErrorPopup error={error} onClose={handleCloseError} />
+      )}
+      <ErrorBoundary FallbackComponent={() => null} onError={handleError}>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ErrorBoundary>
+    </div>
   );
 };
 

@@ -13,7 +13,7 @@ function Home() {
         setReservations(data);
         if (data.length > 0) {
           const recentReservation = data[data.length - 1]; // Pega a reserva mais recente
-          setMessage(`Sua reserva de auditório no dia ${recentReservation.date} às ${recentReservation.time} está ${recentReservation.status}.`);
+          setMessage(`Sua reserva de ${recentReservation.resource} no dia ${recentReservation.date} às ${recentReservation.time} está ${recentReservation.status}.`);
         } else {
           setMessage("Você não tem reservas.");
         }
