@@ -19,7 +19,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     
     # Login de usuário (token)
-    path('api/auth/token/login/', obtain_auth_token, name='token-login'),
+    path('login/', LoginView.as_view(), name='login'),
 
     # Solicitação de reserva
     path('reservations/create/', CreateReservationView.as_view(), name='create-reservation'),

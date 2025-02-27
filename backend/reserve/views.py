@@ -1,18 +1,30 @@
+# Bibliotecas padrão do Django
 from django.http import JsonResponse
-from django.contrib.auth import authenticate
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth import authenticate, login
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+
+# Django Rest Framework
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError
-from django.utils.timezone import now
-from django.shortcuts import render, get_object_or_404
-from .models import Reservation, Auditorium, MeetingRoom, Vehicle
+
+# Django Rest Framework Simple JWT
+from rest_framework_simplejwt.tokens import RefreshToken
+
+token = RefreshToken.for_user(user)
+access_token = str(token.access_token)
+
+# Modelos
+from .models import CustomUser, Reservation, Auditorium, MeetingRoom, Vehicle
+
+# Serializers
 from .serializers import (
     AuditoriumSerializer, MeetingRoomSerializer, VehicleSerializer,
-    CustomUserSerializer, ReservationSerializer
+    CustomUserSerializer, ReservationSerializer, LoginSerializer
 )
+
 
 def index(request):
     return JsonResponse({'message': 'Ola do Django!'})
@@ -64,15 +76,23 @@ class RegisterView(APIView):
 
 # Login de usuário
 class LoginView(APIView):
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user and user.is_active:
-            # Aqui usamos o token simples
-            token, created = obtain_auth_token(request)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
-        raise ValidationError("Credenciais inválidas ou usuário inativo.")
+    def post(self, request, *args, **kwargs):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        
+        # Gera o token
+        token, created = Token.objects.get_or_create(user=user)
+        
+        # Faz o login
+        login(request, user)
+        
+        # Retorna o token e dados do usuário
+        return Response({
+            'token': token.key,
+            'user': CustomUserSerializer(user).data
+        }, status=status.HTTP_200_OK)
+
 
 # Listagem de reservas para administradores
 class AdminReservationListView(generics.ListAPIView):
