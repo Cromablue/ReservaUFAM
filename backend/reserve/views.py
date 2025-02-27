@@ -62,6 +62,8 @@ class VehicleDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
 
 # Cadastro de usuário
 class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]  # Permite acesso sem autenticação
+
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
