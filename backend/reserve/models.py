@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 # Model for Users
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db import models
+
 class CustomUser(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Administrator"
@@ -12,12 +15,25 @@ class CustomUser(AbstractUser):
     siape = models.CharField(max_length=7, unique=True, null=False)
     cpf = models.CharField(max_length=11, unique=True, null=False)
     cellphone = models.CharField(max_length=15, null=True, blank=True)
+
     STATUS_CHOICES = [
         ('Pendente', 'Pending'),
         ('Aprovado', 'Approved'),
         ('Reprovado', 'Rejected'),
     ]
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pendente', blank=True)
+
+    # Adicionando related_name para evitar conflitos
+    groups = models.ManyToManyField(
+        Group,
+        related_name='customuser_set',  # Relacionamento reverso único
+        blank=True
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='customuser_set',  # Relacionamento reverso único
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_role_display()})"
