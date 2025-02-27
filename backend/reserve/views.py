@@ -13,9 +13,6 @@ from rest_framework.exceptions import ValidationError
 # Django Rest Framework Simple JWT
 from rest_framework_simplejwt.tokens import RefreshToken
 
-token = RefreshToken.for_user(user)
-access_token = str(token.access_token)
-
 # Modelos
 from .models import CustomUser, Reservation, Auditorium, MeetingRoom, Vehicle
 
@@ -28,6 +25,7 @@ from .serializers import (
 
 def index(request):
     return JsonResponse({'message': 'Ola do Django!'})
+
 
 # Painel do administrador para gerenciar auditórios
 class AuditoriumAdminView(generics.ListCreateAPIView):
@@ -79,17 +77,17 @@ class LoginView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        user = serializer.validated_data['user']  # Aqui você obtém o usuário do serializer
         
         # Gera o token
-        token, created = Token.objects.get_or_create(user=user)
+        token = RefreshToken.for_user(user)  # Agora 'user' está definido
         
         # Faz o login
         login(request, user)
         
         # Retorna o token e dados do usuário
         return Response({
-            'token': token.key,
+            'token': str(token.access_token),  # Retorna o access token
             'user': CustomUserSerializer(user).data
         }, status=status.HTTP_200_OK)
 
