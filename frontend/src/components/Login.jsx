@@ -1,65 +1,84 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "../assets/logo.png";
+
 const Login = () => {
-  const handleLogin = (e) => {
-    e.preventDefault();
-    console.log("Login realizado");
+  const [formData, setFormData] = useState({
+    identifier: "", // Pode ser email, username ou siape
+    password: ""
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    const response = await fetch('http://127.0.0.1:8000/api/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            identifier: formData.identifier, // Pode ser email, username ou siape
+            password: formData.password,
+        }),
+    });
+
+    // Verificando a resposta antes de tentar parsear
+    const text = await response.text();  // Obtém a resposta como texto
+    console.log(text);  // Verifica o que está sendo retornado
+
+    try {
+        const data = JSON.parse(text);  // Tenta fazer o parse
+        if (response.ok) {
+            localStorage.setItem('token', data.token);
+            console.log('Login bem-sucedido:', data);
+        } else {
+            console.error('Erro ao fazer login:', data);
+        }
+    } catch (error) {
+        console.error('Erro ao fazer o parse do JSON:', error);
+    }
+};
+
+
   return (
     <section className="flex items-center justify-center flex-col gap-4">
-            <img src={logo} alt="logo" className="w-26 h-20" />
-          {/* <!-- Right column container with form --> */}
-          <div className="border-2 border-gray-300 rounded-md p-4 w-60 h-60">
-            <form onSubmit={handleLogin}>
-              {/* <!-- Email input --> */}
-              <label htmlFor="siape">SIAPE: </label>
-              <input
-                type="text"
-                label="SIAPE"
-                style={{border: "1px solid #ccc"}}
-                size="lg"
-              ></input>
+      <img src={logo} alt="logo" className="w-26 h-20" />
+      <div className="border-2 border-gray-300 rounded-md p-4 w-60 h-60">
+        <form onSubmit={handleLogin}>
+          <label htmlFor="identifier">Identificador (email, username ou SIAPE): </label>
+          <input
+            type="text"
+            name="identifier"
+            value={formData.identifier}
+            onChange={handleChange}
+            style={{ border: "1px solid #ccc" }}
+          />
 
-              {/* <!--Password input--> */}
-              <label htmlFor="password">Senha: </label>
-              <input
-                type="password"
-                label="Senha"
-                style={{border: "1px solid #ccc"}}
-                size="lg"
-              ></input>
+          <label htmlFor="password">Senha: </label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            style={{ border: "1px solid #ccc" }}
+          />
 
-              {/* <!-- Remember me checkbox --> */}
-              <div className="mb-6 flex justify-between flex-col">
-
-                {/* <!-- Forgot password link --> */}
-                <a
-                  href="#!"
-                  className="text-primary transition duration-150 ease-in-out hover:text-primary-600 focus:text-primary-600 active:text-primary-700 dark:text-primary-400 dark:hover:text-primary-500 dark:focus:text-primary-500 dark:active:text-primary-600"
-                >
-                  Esqueceu sua senha?
-                </a>
-                <a
-                  href="#!"
-                  className="text-primary transition duration-150 ease-in-out hover:text-primary-600 focus:text-primary-600 active:text-primary-700 dark:text-primary-400 dark:hover:text-primary-500 dark:focus:text-primary-500 dark:active:text-primary-600"
-                >
-                  Primeiro acesso
-                </a>
-              </div>
-
-              {/* <!-- Submit button --> */}
-              <div className="flex items-center justify-center">
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded-md items-center justify-center"
-                >
-                  Entrar
-                </button>
-              </div>
-            </form>
+          <div className="flex items-center justify-center">
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded-md"
+            >
+              Entrar
+            </button>
           </div>
+        </form>
+      </div>
     </section>
   );
-}
+};
 
 export default Login;

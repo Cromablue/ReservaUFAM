@@ -39,6 +39,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # Para JWT
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.TokenAuthentication",
@@ -47,6 +48,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -80,6 +82,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "setup.wsgi.application"
+
+# Indica o modelo de usuário personalizado
+AUTH_USER_MODEL = 'reserve.CustomUser'
+
+# Adiciona o backend de autenticação personalizado
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'reserve.backends.CustomUserAuthBackend',
+]
 
 
 # Database
