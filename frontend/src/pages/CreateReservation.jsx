@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import logo from "../assets/logo.png";
 
 const resourceTranslations = {
     "auditorium": "Auditório",
@@ -6,7 +7,6 @@ const resourceTranslations = {
     "vehicle": "Veículo"
 };
 
-// Função para gerar opções de horários válidos (07:00 - 23:30, com intervalos de 30min)
 const generateTimeOptions = () => {
     const options = [];
     for (let hour = 7; hour < 24; hour++) {
@@ -31,14 +31,12 @@ const CreateReservation = () => {
     const [message, setMessage] = useState("");
     const timeOptions = generateTimeOptions();
 
-    // Obtém a data mínima permitida (2 dias a partir de hoje)
     const getMinDate = () => {
         const today = new Date();
         today.setDate(today.getDate() + 2);
-        return today.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+        return today.toISOString().split("T")[0];
     };
 
-    // Carrega os recursos disponíveis ao selecionar um tipo
     useEffect(() => {
         if (form.resourceType) {
             fetch(`http://127.0.0.1:8000/api/${form.resourceType}/`)
@@ -48,30 +46,14 @@ const CreateReservation = () => {
         }
     }, [form.resourceType]);
 
-    // Atualiza os campos do formulário
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // Validação de datas
-        if ((name === "initial_date" || name === "final_date") && value < getMinDate()) {
-            setMessage("As reservas devem ser feitas com pelo menos 2 dias de antecedência.");
-            return;
-        }
-
-        // Validação de horários
-        if (name === "final_time" && form.initial_time && value <= form.initial_time) {
-            setMessage("O horário final deve ser maior que o inicial.");
-            return;
-        }
-
-        setMessage(""); // Limpa mensagens de erro se tudo estiver certo
+        setMessage("");
         setForm({ ...form, [name]: value });
     };
 
-    // Enviar reserva
     const handleSubmit = (e) => {
         e.preventDefault();
-
         if (!form.resourceType || !form.resourceId) {
             setMessage("Por favor, selecione um recurso.");
             return;
@@ -115,90 +97,51 @@ const CreateReservation = () => {
     };
 
     return (
-        <div>
-            <h2>Fazer Reserva</h2>
-
-            <form onSubmit={handleSubmit}>
-                {/* Seleção do tipo de recurso */}
-                <label>Selecione um Recurso:</label>
-                <select name="resourceType" value={form.resourceType} onChange={handleChange}>
-                    <option value="">Selecione</option>
-                    {Object.keys(resourceTranslations).map((key) => (
-                        <option key={key} value={key}>
-                            {resourceTranslations[key]}
-                        </option>
-                    ))}
-                </select>
-
-                {/* Seleção do recurso específico */}
-                {resources.length > 0 && (
-                    <>
-                        <label>Escolha um {resourceTranslations[form.resourceType]}:</label>
-                        <select name="resourceId" value={form.resourceId} onChange={handleChange}>
+            <div className="border-2 border-gray-300 rounded-lg p-6 w-1/2 items-center">
+                <h2 className="text-2xl font-bold text-center mb-4">Solicitação de Reserva</h2>
+                <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
+                    <label className="font-bold flex items-center gap-4 mb-4">
+                        Selecione o tipo de reserva:
+                        <select name="resourceType" value={form.resourceType} onChange={handleChange} className="border-2 border-gray-300 rounded-lg p-2 font-normal">
                             <option value="">Selecione</option>
-                            {resources.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.nome}
-                                </option>
+                            {Object.keys(resourceTranslations).map((key) => (
+                                <option key={key} value={key}>{resourceTranslations[key]}</option>
                             ))}
                         </select>
-                    </>
-                )}
+                    </label>
+                    {resources.length > 0 && (
+                        <label className="font-bold">Escolha um recurso:
+                            <select name="resourceId" value={form.resourceId} onChange={handleChange} className="border-2 border-gray-300 rounded-lg p-2">
+                                <option value="">Selecione</option>
+                                {resources.map((item) => (
+                                    <option key={item.id} value={item.id}>{item.nome}</option>
+                                ))}
+                            </select>
+                        </label>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-4">
+                            <label htmlFor="data-inicial" className="font-bold">Data inicial:</label>
+                            <input type="date" id="data-inicial" name="data_inicial" value={form.initial_date} onChange={handleChange} min={getMinDate()} required className="border-2 border-gray-300 rounded-lg p-2" />
 
-                {/* Datas */}
-                <label>Data Inicial:</label>
-                <input 
-                    type="date" 
-                    name="initial_date" 
-                    value={form.initial_date} 
-                    onChange={handleChange} 
-                    min={getMinDate()} 
-                    required 
-                />
+                            <label htmlFor="horario-inicial" className="font-bold">Horário inicial:</label>
+                            <input type="time" id="horario-inicial" name="horario_inicial" value={form.initial_time} onChange={handleChange} required className="border-2 border-gray-300 rounded-lg p-2" />
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <label htmlFor="data-final" className="font-bold">Data final:</label>
+                            <input type="date" id="data-final" name="data_final" value={form.final_date} onChange={handleChange} min={form.initial_date || getMinDate()} required className="border-2 border-gray-300 rounded-lg p-2" />
 
-                <label>Data Final:</label>
-                <input 
-                    type="date" 
-                    name="final_date" 
-                    value={form.final_date} 
-                    onChange={handleChange} 
-                    min={form.initial_date || getMinDate()} 
-                    required 
-                />
-
-                {/* Horários */}
-                <label>Hora Inicial:</label>
-                <select name="initial_time" value={form.initial_time} onChange={handleChange} required>
-                    <option value="">Selecione</option>
-                    {timeOptions.map((time) => (
-                        <option key={time} value={time}>
-                            {time}
-                        </option>
-                    ))}
-                </select>
-
-                <label>Hora Final:</label>
-                <select name="final_time" value={form.final_time} onChange={handleChange} required>
-                    <option value="">Selecione</option>
-                    {timeOptions
-                        .filter((time) => !form.initial_time || time > form.initial_time) // Impede horários inválidos
-                        .map((time) => (
-                            <option key={time} value={time}>
-                                {time}
-                            </option>
-                        ))}
-                </select>
-
-                {/* Descrição */}
-                <label>Descrição:</label>
-                <textarea name="description" value={form.description} onChange={handleChange} required />
-
-                {message && <p style={{ color: "red" }}>{message}</p>}
-                
-                {/* Botão de envio */}
-                <button type="submit">Reservar</button>
-            </form>
-        </div>
+                            <label htmlFor="horario-final" className="font-bold">Horário final:</label>
+                            <input type="time" id="horario-final" name="horario_final" value={form.final_time} onChange={handleChange} required className="border-2 border-gray-300 rounded-lg p-2" />
+                        </div>
+                    </div>
+                    <label className="font-bold">Descrição:
+                        <textarea name="description" value={form.description} onChange={handleChange} required className="border-2 border-gray-300 rounded-lg p-2"></textarea>
+                    </label>
+                    {message && <p className="text-red-600">{message}</p>}
+                    <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg self-center">Reservar</button>
+                </form>
+            </div>
     );
 };
 

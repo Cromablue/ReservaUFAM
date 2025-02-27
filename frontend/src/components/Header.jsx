@@ -13,19 +13,19 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-primary w-full h-16 p-10">
+        <header className="flex items-center justify-between bg-primary w-full h-16 p-6 shadow-md mb-4">
             <a href="/home">
-                <img src={logo} alt="logo" className="absolute top-4 left-10 w-26 h-10" />
+                <img src={logo} alt="logo" className="w-26 h-10" />
             </a>
             <nav>
                 <ul className="flex items-center flex-row">
-                    <li className="p-4 hover:text-blue-600">
-                        <a href="/solicitar-reserva">Solicitar Reserva</a>
+                    <li className="p-2 hover:text-blue-600">
+                        <a href="/reservations/create">Solicitar Reserva</a> {/* Atualizado para a página de criação de reservas */}
                     </li>
-                    <li className="p-4 hover:text-blue-600">
-                        <a href="/lista-reservas">Lista de Reservas</a>
+                    <li className="p-2 hover:text-blue-600">
+                        <a href="/user/reservations">Lista de Reservas</a> {/* Atualizado para a página de lista de reservas */}
                     </li>
-                    <li className="p-4">
+                    <li className="p-2">
                         <button 
                             type="button" 
                             className="bg-red-600 text-white px-4 py-2 rounded-md"
