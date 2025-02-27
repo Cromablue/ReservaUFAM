@@ -9,10 +9,16 @@ import AdminReservations from "./pages/AdminReservations";
 import UpdateReservationStatus from "./pages/UpdateReservationStatus";
 import UserReservations from "./pages/UserReservations";
 import CancelReservation from "./pages/CancelReservation";
+import AdminPage from "./pages/AdminPage";
+import AdminUsuarios from "./pages/AdminUsuarios";
+import AdminRecursos from "./pages/AdminRecursos";
 
 const router = createBrowserRouter([
   { path: "/", element: <Login /> },
   { path: "/register", element: <Register /> },
+  { path: "/admin/page", element: <AdminPage/>},
+  { path: "/admin/users", element: <AdminUsuarios/>},
+  { path: "/admin/recursos", element: <AdminRecursos/>},
   { path: "/home", element: <ProtectedPage><Home /></ProtectedPage> },
   { path: "/reservations/create", element: <ProtectedPage><CreateReservation /></ProtectedPage> },
   { path: "/admin/reservations", element: <ProtectedPage><AdminReservations /></ProtectedPage> },
