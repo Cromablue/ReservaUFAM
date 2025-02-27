@@ -1,4 +1,5 @@
 from django.urls import path
+from . import views
 from .views import (
     RegisterView,
     LoginView,
@@ -6,10 +7,13 @@ from .views import (
     AdminReservationListView,
     UpdateReservationStatusView,
     UserReservationListView,
-    ReservationDetailView
+    CancelReservationView,
 )
 
 urlpatterns = [
+    # Home
+    path('', views.index, name='index'),
+
     # Cadastro de usuário
     path('register/', RegisterView.as_view(), name='register'),
     
@@ -28,6 +32,6 @@ urlpatterns = [
     # Lista de reservas do usuário logado
     path('user/reservations/', UserReservationListView.as_view(), name='user-reservation-list'),
     
-    # Detalhes de uma reserva (admin e usuário)
-    path('reservations/<int:pk>/', ReservationDetailView.as_view(), name='reservation-detail'),
+    # Cancelar reserva
+    path('user/reservations/<int:pk>/cancel/', CancelReservationView.as_view(), name='cancel-reservation'),
 ]
