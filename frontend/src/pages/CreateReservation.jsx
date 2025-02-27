@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import logo from "../assets/logo.png";
 
 const resourceTranslations = {
     "auditorium": "Auditório",
