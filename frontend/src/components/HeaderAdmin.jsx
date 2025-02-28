@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 
-const Header = () => {
+const HeaderAdmin = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,28 +19,36 @@ const Header = () => {
 
     return (
         <header className="flex items-center justify-between bg-primary w-full h-14 shadow-md mb-4 p-3">
-            <a href="/home" className="ml-4">
+            <a href="/admin/page" className="ml-4">
                 <img src={logo} alt="logo" className="w-26 h-9" />
             </a>
             <nav>
                 <ul className="flex items-center flex-row">
-                    <a href="/reservations/create" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/reservations/create')}`}>
+                    <a href="/admin/page" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/admin/page')}`}>
                         <li>
-                            Solicitar Reserva
+                            Painel
                         </li>
-                    </a> {/* Atualizado para a página de criação de reservas */}
-                    <a href="/reservations" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/reservations')}`}>
+                    </a>
+                    <a href="/admin/reservations" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/admin/reservations')}`}>
                         <li>
-                            Minhas Reservas
+                            Reservas
                         </li>
-                    </a> {/* Atualizado para a página de lista de reservas */}
-                    
-                    <a href="/user/profile" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/user/profile')}`}>
+                    </a>
+                    <a href="/admin/users" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/admin/users')}`}>
+                        <li>
+                            Usuários
+                        </li>
+                    </a>
+                    <a href="/admin/resources" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/admin/resources')}`}>
+                        <li>
+                            Recursos
+                        </li>
+                    </a>
+                    <a href="/admin/profile" className={`p-4 hover:text-green-600 hover:border-b-2 border-green-600 transition-colors duration-300 ${isActive('/admin/profile')}`}>
                         <li>
                             Perfil
                         </li>
-                    </a> {/* Atualizado para a página de lista de reservas */}
-                    
+                    </a>
                     <li className="p-4">
                         <button 
                             type="button" 
@@ -56,4 +64,4 @@ const Header = () => {
     );
 };
 
-export default Header;
+export default HeaderAdmin;

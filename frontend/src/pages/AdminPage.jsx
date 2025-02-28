@@ -1,67 +1,77 @@
-import React from 'react';
+import { useEffect, useState } from "react";
 
 function AdminPage() {
-    const reservas = [
-        {
-          id: 1,
-          dataInicial: '2023-03-01',
-          dataFinal: '2023-03-03',
-          horaInicial: '10:00',
-          horaFinal: '12:00',
-          descricao: 'Reserva de exemplo',
-          status: 'Pendente',
-        },
-        {
-          id: 2,
-          dataInicial: '2023-03-05',
-          dataFinal: '2023-03-07',
-          horaInicial: '14:00',
-          horaFinal: '16:00',
-          descricao: 'Outra reserva de exemplo',
-          status: 'Pendente',
-        },
-      ];
-    
-      return (
-        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-          <h1 className="text-3xl font-bold mb-4">Reservas</h1>
-          {reservas.map((reserva) => (
-            <div key={reserva.id} className="bg-white shadow-md rounded-md p-4 mb-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-100 p-4 rounded-md">
-                  <h2 className="text-2xl font-bold mb-2">Reserva {reserva.id}</h2>
-                  <div className="flex flex-col">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-lg font-bold">Data Inicial:</span>
-                      <span className="text-lg">{reserva.dataInicial}</span>
-                      <span className="text-lg font-bold ml-4">Data Final:</span>
-                      <span className="text-lg">{reserva.dataFinal}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-lg font-bold">Hora Inicial:</span>
-                      <span className="text-lg">{reserva.horaInicial}</span>
-                      <span className="text-lg font-bold ml-4">Hora Final:</span>
-                      <span className="text-lg">{reserva.horaFinal}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-lg font-bold">Status:</span>
-                      <span className="text-lg">{reserva.status}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-lg font-bold mb-2">Descrição:</span>
-                      <span className="text-lg">{reserva.descricao}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md mr-2">Confirmar</button>
-                  <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md">Rejeitar</button>
-                </div>
-              </div>
-            </div>
-          ))}
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/user/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Erro ao carregar dados do administrador');
+        }
+        const userData = await response.json();
+        setUsername(userData.username);
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setError("Não foi possível carregar os dados do administrador");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (loading) {
+    return <div className="p-6">Carregando...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-600">{error}</div>;
+  }
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-green-500 to-blue-500 text-transparent bg-clip-text mb-6">
+        Painel Administrativo
+      </h1>
+      <h2 className="text-xl mb-4">Bem-vindo, {username}!</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h3 className="font-semibold mb-2">Gerenciar Reservas</h3>
+          <p className="text-gray-600">Visualize e gerencie todas as reservas</p>
+          <a href="/admin/reservations" className="text-blue-600 hover:underline mt-2 inline-block">
+            Acessar →
+          </a>
         </div>
-      );
-    }
+
+        <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h3 className="font-semibold mb-2">Gerenciar Usuários</h3>
+          <p className="text-gray-600">Administre os usuários do sistema</p>
+          <a href="/admin/users" className="text-blue-600 hover:underline mt-2 inline-block">
+            Acessar →
+          </a>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h3 className="font-semibold mb-2">Gerenciar Recursos</h3>
+          <p className="text-gray-600">Configure os recursos disponíveis</p>
+          <a href="/admin/resources" className="text-blue-600 hover:underline mt-2 inline-block">
+            Acessar →
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default AdminPage;

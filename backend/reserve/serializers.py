@@ -6,8 +6,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'password', 'siape', 'role', 'cpf', 'cellphone', 'status']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'email', 'password', 'siape', 'role', 'cpf', 'cellphone', 'status', 'is_staff']
+        read_only_fields = ['id', 'is_staff']  # is_staff será somente leitura
 
     def create(self, validated_data):
         return CustomUser.objects.create_user(**validated_data)
@@ -61,41 +61,62 @@ class VehicleSerializer(serializers.ModelSerializer):
 
 class ReservationSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only=True)
-    auditorium = AuditoriumSerializer(required=False, allow_null=True)
-    meeting_room = MeetingRoomSerializer(required=False, allow_null=True)
-    vehicle = VehicleSerializer(required=False, allow_null=True)
+    resource_type = serializers.ChoiceField(choices=Reservation.ResourceType.choices)
+    resource_id = serializers.IntegerField()
 
     class Meta:
         model = Reservation
-        fields = ['id', 'user', 'initial_date', 'final_date', 'initial_time', 'final_time', 'description', 'status', 'auditorium', 'meeting_room', 'vehicle', 'is_deleted']
+        fields = ['id', 'user', 'initial_date', 'final_date', 'initial_time', 
+                 'final_time', 'description', 'status', 'resource_type', 
+                 'resource_id', 'is_deleted']
 
     def validate(self, data):
-        selected_resources = [data.get('auditorium'), data.get('meeting_room'), data.get('vehicle')]
-        
-        if sum(bool(resource) for resource in selected_resources) != 1:
-            raise serializers.ValidationError("You must select exactly one resource (Auditorium, Meeting Room, or Vehicle).")
-
+        # Valida datas e horários
         initial_date = data.get('initial_date')
         final_date = data.get('final_date')
         initial_time = data.get('initial_time')
         final_time = data.get('final_time')
 
         if initial_date > final_date:
-            raise serializers.ValidationError("Initial date must be before final date.")
+            raise serializers.ValidationError(
+                "A data inicial deve ser anterior à data final"
+            )
 
         if initial_date == final_date and initial_time >= final_time:
-            raise serializers.ValidationError("Initial time must be before final time on the same day.")
+            raise serializers.ValidationError(
+                "O horário inicial deve ser anterior ao horário final no mesmo dia"
+            )
 
-        resource_filters = {k: v for k, v in data.items() if k in ['auditorium', 'meeting_room', 'vehicle'] and v}
+        # Verifica se o recurso existe
+        resource_type = data.get('resource_type')
+        resource_id = data.get('resource_id')
+        
+        resource_model = {
+            'auditorium': Auditorium,
+            'meeting_room': MeetingRoom,
+            'vehicle': Vehicle
+        }.get(resource_type)
+        
+        if not resource_model:
+            raise serializers.ValidationError("Tipo de recurso inválido")
+            
+        try:
+            resource = resource_model.objects.get(id=resource_id)
+        except resource_model.DoesNotExist:
+            raise serializers.ValidationError(f"{resource_type} com ID {resource_id} não existe")
 
-        # Melhorando a consulta, considerando que as datas e horários já foram validados
+        # Verifica se já existe uma reserva para este recurso no mesmo período
         if Reservation.objects.filter(
+            resource_type=resource_type,
+            resource_id=resource_id,
             initial_date=initial_date,
             final_date=final_date,
             initial_time__lt=final_time,
             final_time__gt=initial_time,
-            **resource_filters
+            is_deleted=False
         ).exists():
-            raise serializers.ValidationError("This resource is already booked for the selected date and time.")
+            raise serializers.ValidationError(
+                "Este recurso já está reservado para o período selecionado"
+            )
 
         return data

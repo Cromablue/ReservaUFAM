@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedPage from "./components/ProtectedPage";
 import Main from "./components/Main";
 import Header from "./components/Header";
+import HeaderAdmin from "./components/HeaderAdmin";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,7 +16,8 @@ import CancelReservation from "./pages/CancelReservation";
 import AdminPage from "./pages/AdminPage";
 import AdminUsuarios from "./pages/AdminUsuarios";
 import AdminRecursos from "./pages/AdminRecursos";
-
+import UserProfile from "./pages/UserProfile";
+import AdminProfile from "./pages/AdminProfile";
 
 import ErrorPopup from "./components/ErrorPopup";
 import {ErrorBoundary} from "react-error-boundary";
@@ -30,18 +32,28 @@ const protectedElement = (Component) => (
   </ProtectedPage>
 );
 
-const router = createBrowserRouter([
+const protectedElementAdmin = (Component) => (
+  <ProtectedPage>
+    <HeaderAdmin />
+    <Main>
+      <Component />
+    </Main>
+  </ProtectedPage>
+);
 
+const router = createBrowserRouter([
   { path: "/", element: <Main><Login /></Main> },
   { path: "/register", element: <Main><Register /></Main> },
-  { path: "/admin/page", element: <AdminPage/>},
-  { path: "/admin/users", element: <AdminUsuarios/>},
-  { path: "/admin/recursos", element: <AdminRecursos/>},
+  { path: "/admin/page", element: protectedElementAdmin(AdminPage)},
+  { path: "/admin/reservations", element: protectedElementAdmin(AdminReservations) },
+  { path: "/admin/users", element: protectedElementAdmin(AdminUsuarios)},
+  { path: "/admin/resources", element: protectedElementAdmin(AdminRecursos)},
+  { path: "/admin/profile", element: protectedElementAdmin(AdminProfile)},
   { path: "/home", element: protectedElement(Home) },
   { path: "/reservations/create", element: protectedElement(CreateReservation) },
-  { path: "/admin/reservations", element: protectedElement(AdminReservations) },
-  { path: "/admin/reservations/:id/status", element: protectedElement(UpdateReservationStatus) },
-  { path: "/user/reservations", element: protectedElement(UserReservations) },
+  { path: "/user/profile", element: protectedElement(UserProfile) },
+  { path: "/admin/reservations/:id/status", element: protectedElementAdmin(UpdateReservationStatus) },
+  { path: "/reservations", element: protectedElement(UserReservations) },
   { path: "/user/reservations/:id/cancel", element: protectedElement(CancelReservation) }
 ]);
 

@@ -89,6 +89,11 @@ class Reservation(models.Model):
         CONFIRMED = "Confirmado", "Confirmed"
         CANCELED = "Cancelado", "Canceled"
     
+    class ResourceType(models.TextChoices):
+        AUDITORIUM = "auditorium", "Auditório"
+        MEETING_ROOM = "meeting_room", "Sala de Reunião"
+        VEHICLE = "vehicle", "Veículo"
+    
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reservations")
     initial_date = models.DateField()
     final_date = models.DateField()
@@ -98,10 +103,43 @@ class Reservation(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     is_deleted = models.BooleanField(default=False)
     
-    # Foreign keys for different reservable items (only one should be filled)
+   # Novos campos para identificar o recurso
+    resource_type = models.CharField(max_length=20, choices=ResourceType.choices, null=True)
+    resource_id = models.IntegerField(null=True)
+    
+    # Mantemos as ForeignKeys para manter a integridade referencial
     auditorium = models.ForeignKey(Auditorium, on_delete=models.SET_NULL, null=True, blank=True)
     meeting_room = models.ForeignKey(MeetingRoom, on_delete=models.SET_NULL, null=True, blank=True)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        # Atualiza o resource_type e resource_id baseado nas ForeignKeys existentes
+        if self.auditorium_id:
+            self.resource_type = self.ResourceType.AUDITORIUM
+            self.resource_id = self.auditorium_id
+        elif self.meeting_room_id:
+            self.resource_type = self.ResourceType.MEETING_ROOM
+            self.resource_id = self.meeting_room_id
+        elif self.vehicle_id:
+            self.resource_type = self.ResourceType.VEHICLE
+            self.resource_id = self.vehicle_id
+
+        # Atualiza o campo apropriado baseado no resource_type e resource_id
+        if self.resource_type and self.resource_id:
+            if self.resource_type == self.ResourceType.AUDITORIUM:
+                self.auditorium_id = self.resource_id
+                self.meeting_room = None
+                self.vehicle = None
+            elif self.resource_type == self.ResourceType.MEETING_ROOM:
+                self.meeting_room_id = self.resource_id
+                self.auditorium = None
+                self.vehicle = None
+            elif self.resource_type == self.ResourceType.VEHICLE:
+                self.vehicle_id = self.resource_id
+                self.auditorium = None
+                self.meeting_room = None
+        
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"Reservation by {self.user.get_full_name()} ({self.status})"

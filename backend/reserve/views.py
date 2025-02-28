@@ -3,12 +3,14 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
+from rest_framework.permissions import IsAuthenticated
 
 # Django Rest Framework
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from django.db.models import Q
 
 # Django Rest Framework Simple JWT
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,16 +24,40 @@ from .serializers import (
     CustomUserSerializer, ReservationSerializer, LoginSerializer
 )
 
-
 def index(request):
     return JsonResponse({'message': 'Ola do Django!'})
 
+# Modificação na view de token (login)
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
+from django.utils.translation import gettext_lazy as _
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        # Primeiro chamamos o método de validação original para verificar as credenciais
+        data = super().validate(attrs)
+        
+        # Verificamos o status do usuário - DEVE SER APROVADO
+        if self.user.status != 'Aprovado':
+            raise AuthenticationFailed(
+                _('Sua conta ainda não foi aprovada pelo administrador.')
+            )
+            
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 # Painel do administrador para gerenciar auditórios
 class AuditoriumAdminView(generics.ListCreateAPIView):
     queryset = Auditorium.objects.all()
     serializer_class = AuditoriumSerializer
-    permission_classes = [permissions.IsAdminUser]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
 class AuditoriumDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auditorium.objects.all()
@@ -42,7 +68,11 @@ class AuditoriumDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
 class MeetingRoomAdminView(generics.ListCreateAPIView):
     queryset = MeetingRoom.objects.all()
     serializer_class = MeetingRoomSerializer
-    permission_classes = [permissions.IsAdminUser]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
 class MeetingRoomDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MeetingRoom.objects.all()
@@ -53,7 +83,11 @@ class MeetingRoomDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
 class VehicleAdminView(generics.ListCreateAPIView):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
-    permission_classes = [permissions.IsAdminUser]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
 class VehicleDetailAdminView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Vehicle.objects.all()
@@ -90,6 +124,60 @@ class LoginView(APIView):
             'user': CustomUserSerializer(user).data
         }, status=status.HTTP_200_OK)
 
+# Visualizar os detalhes do usuário logado
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]  # Apenas usuários logados podem acessar
+
+    def get(self, request):
+        serializer = CustomUserSerializer(request.user)
+        return Response(serializer.data)
+
+# Adicione esta view ao arquivo views.py
+class AdminUserListView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        users = CustomUser.objects.all().order_by('-date_joined')
+        serializer = CustomUserSerializer(users, many=True)
+        return Response(serializer.data)
+    
+    # View para atualizar o status de um usuário
+class UpdateUserStatusView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, pk):
+        user = get_object_or_404(CustomUser, pk=pk)
+        status = request.data.get('status')
+        if status not in ['Pendente', 'Aprovado', 'Reprovado', 'Bloqueado']:
+            return Response({"error": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.status = status
+        user.save()
+        return Response({"message": f"Status do usuário alterado para {status}"})
+    
+# Profile do usuário
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]  # Apenas usuários logados podem acessar
+
+    def get(self, request):
+        """Retorna os dados do usuário logado"""
+        serializer = CustomUserSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """Permite que o usuário edite seu próprio perfil"""
+        user = request.user
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            # Se o usuário estiver alterando a senha, tratamos corretamente
+            if "password" in request.data:
+                user.set_password(request.data["password"])
+                user.save()
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Listagem de reservas para administradores
 class AdminReservationListView(generics.ListAPIView):
@@ -127,17 +215,14 @@ class CreateReservationView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        meeting_room = serializer.validated_data.get('meeting_room')
-        if meeting_room and not Reservation.objects.filter(
-            meeting_room=meeting_room,
-            initial_date=serializer.validated_data['initial_date'],
-            final_date=serializer.validated_data['final_date'],
-            initial_time__lt=serializer.validated_data['final_time'],
-            final_time__gt=serializer.validated_data['initial_time'],
-        ).exists():
-            serializer.save(user=self.request.user, status='Aprovado')
-        else:
-            serializer.save(user=self.request.user, status='Pendente')
+        # Define o status inicial baseado no tipo de recurso
+        resource_type = serializer.validated_data['resource_type']
+        initial_status = 'Aprovado' if resource_type == 'meeting_room' else 'Pendente'
+        
+        serializer.save(
+            user=self.request.user,
+            status=initial_status
+        )
 
 # Aprovar/Reprovar reserva
 class UpdateReservationStatusView(APIView):
@@ -161,3 +246,47 @@ class CancelReservationView(APIView):
         reservation.is_deleted = True
         reservation.save()
         return Response({"message": "Reserva cancelada com sucesso."}, status=status.HTTP_200_OK)
+
+# View para buscar datas ocupadas de um recurso
+class OccupiedDatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, resource_type, resource_id):
+        try:
+            # Mapeia o tipo de recurso para o campo correto
+            resource_field = {
+                'auditorium': 'auditorium_id',
+                'meeting_room': 'meeting_room_id',
+                'vehicle': 'vehicle_id'
+            }.get(resource_type)
+
+            if not resource_field:
+                return Response(
+                    {"error": "Tipo de recurso inválido"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Busca as reservas do recurso
+            reservations = Reservation.objects.filter(
+                **{resource_field: resource_id},
+                status='Aprovado',
+                final_date__gte=now().date(),
+                is_deleted=False
+            ).values('initial_date', 'final_date', 'initial_time', 'final_time')
+
+            # Formata as datas para retornar
+            occupied_dates = []
+            for reservation in reservations:
+                occupied_dates.append({
+                    'date': reservation['initial_date'],
+                    'initial_time': reservation['initial_time'],
+                    'final_time': reservation['final_time']
+                })
+
+            return Response(occupied_dates)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
