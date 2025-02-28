@@ -7,6 +7,12 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'siape', 'role', 'cpf', 'cellphone', 'status']
         read_only_fields = ['id', 'email']  # Evita editar campos como id e email diretamente
 
+    def create(self, validated_data):
+        print("Dados recebidos para criar usuário:", validated_data)  # Debug
+        user = CustomUser.objects.create_user(**validated_data)  # Garante que a senha seja criptografada
+        print("Usuário criado com sucesso:", user.id)  # Debug
+        return user
+
 class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True)
     password = serializers.CharField(required=True, write_only=True)
