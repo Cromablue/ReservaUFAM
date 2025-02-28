@@ -16,6 +16,14 @@
 O **Reserve** tem como objetivo substituir o processo manual de agendamento de salas, auditórios e veículos na UFAM.  
 Projeto desenvolvido para a disciplina de Engenharia de Aplicações Web do curso de Engenharia de Software da UFAM.
 
+## Funcionalidades  
+- Reserva de salas, auditórios e veículos  
+- Gerenciamento de eventos e atividades acadêmicas  
+- Autenticação de usuários com CPF ou SIAPE  
+- Envio de e-mails de confirmação de reserva  
+- Responsividade para acesso via dispositivos móveis  
+- Tempo de resposta inferior a 3 segundos 
+
 ## 🛠️ Tecnologias Utilizadas
 ![Docker](https://img.shields.io/badge/-Docker-black?style=flat-square&logo=docker)
 ![Python](https://img.shields.io/badge/-Python-black?style=flat-square&logo=python)
@@ -31,7 +39,7 @@ Projeto desenvolvido para a disciplina de Engenharia de Aplicações Web do curs
 - **Frontend:** React   
 - **Banco de Dados:** PostgreSQL  
 - **Autenticação:** (a definir)  
-- **Containerização:** Docker  
+- **Containerização:** Docker 
 
 ## 🚀 Como Executar o Projeto  
 
@@ -90,6 +98,36 @@ Antes de começar, certifique-se de ter instalado:
    exit
    ```
 
+# Configuração
+
+1. Configure o arquivo `.env` com as variáveis de ambiente necessárias.  
+2. Configure o banco de dados **PostgreSQL**.
+
+# Dependências
+
+- Django  
+- PostgreSQL  
+- React  
+- Node.js  
+- Docker  
+
+# Requisitos
+
+- Python 3.11  
+- PostgreSQL 12  
+- Node.js 14  
+- Docker 20  
+
+# Público-alvo
+
+- Alunos e professores da **UFAM**  
+- Funcionários da **UFAM**  
+
+# Casos de uso
+
+- Reserva de sala para evento acadêmico  
+- Reserva de veículo para viagem de campo  
+- Gerenciamento de eventos e atividades acadêmicas  
 
 ## 📜 Licença
 Este projeto é de código aberto e distribuído sob a licença MIT.
