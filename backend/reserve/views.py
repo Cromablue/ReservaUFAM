@@ -67,11 +67,8 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            password = request.data.get('password')
-            user.set_password(password)
-            user.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user = serializer.save()  # O serializer já chama create_user() e lida com a senha
+            return Response(CustomUserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Login de usuário

@@ -2,16 +2,16 @@ from rest_framework import serializers
 from .models import CustomUser, Auditorium, MeetingRoom, Vehicle, Reservation
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)  # Garante que a senha seja fornecida
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'siape', 'role', 'cpf', 'cellphone', 'status']
-        read_only_fields = ['id', 'email']  # Evita editar campos como id e email diretamente
+        fields = ['id', 'username', 'email', 'password', 'siape', 'role', 'cpf', 'cellphone', 'status']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
-        print("Dados recebidos para criar usuário:", validated_data)  # Debug
-        user = CustomUser.objects.create_user(**validated_data)  # Garante que a senha seja criptografada
-        print("Usuário criado com sucesso:", user.id)  # Debug
-        return user
+        return CustomUser.objects.create_user(**validated_data)
+
 
 class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True)

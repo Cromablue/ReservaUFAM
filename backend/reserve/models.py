@@ -6,9 +6,15 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
             raise ValueError("O email é obrigatório")
+
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)
+
+        if password:  # Só define a senha se ela for fornecida
+            user.set_password(password)
+        else:
+            user.set_unusable_password()  # Define senha como inutilizável
+
         user.save(using=self._db)
         return user
 
