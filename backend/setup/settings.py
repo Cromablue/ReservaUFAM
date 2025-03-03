@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = bool(os.environ.get("DEBUG", False))
 
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '').split(',')
 
@@ -29,23 +29,39 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "reserve",
     "corsheaders", # conectar com o frontend
+    "rest_framework", #atualizar o django pra rest
+    "rest_framework.authtoken",
 ]
+
+# Configuração do Django Rest Framework (DRF)
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # Para JWT
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware", # conectar com o frontend
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware", # conectar com o frontend
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080", # para testar o react localmente
-    "http://frontend:8080", # Nome do serviço no Docker Compose
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "setup.urls"
 
@@ -67,6 +83,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "setup.wsgi.application"
 
+# Indica o modelo de usuário personalizado
+AUTH_USER_MODEL = 'reserve.CustomUser'
+
+# Adiciona o backend de autenticação personalizado
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'reserve.backends.CustomUserAuthBackend',
+]
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -77,7 +102,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_NAME'),
         'USER': os.environ.get('POSTGRES_USER'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'reservaufam_db'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
