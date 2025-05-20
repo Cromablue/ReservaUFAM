@@ -15,7 +15,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       args:
         - API_URL=${API_URL}
@@ -28,6 +28,7 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - VITE_API_URL=${API_URL}
     depends_on:
       - backend
 
