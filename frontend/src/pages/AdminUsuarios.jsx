@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MessagePopup from '../components/MessagePopup';
-import api from '../api'; // ajuste o caminho conforme sua estrutura
+import api from '../../api'; // ajuste o caminho conforme sua estrutura
 
 function AdminUsuarios() {
   const [message, setMessage] = useState({ text: "", type: "" });

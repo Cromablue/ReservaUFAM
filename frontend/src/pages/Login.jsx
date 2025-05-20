@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
-import api from '../api'; // ajuste o caminho conforme sua estrutura
+import api from '../../api'; // ajuste o caminho conforme sua estrutura
 
 const Login = () => {
   const navigate = useNavigate();
