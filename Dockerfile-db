@@ -1,0 +1,24 @@
+FROM postgres:15
+
+# Instala dependências para adicionar repositório e instalar pglogical
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg2 \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Adiciona repositório oficial do PostgreSQL para instalar pglogical
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && apt-get update \
+    && apt-get install -y postgresql-15-pglogical \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia o script de configuração para dentro do container
+COPY ./docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
+
+# Configura postgresql.conf para replicação lógica
+RUN echo "shared_preload_libraries = 'pglogical'" >> /usr/share/postgresql/postgresql.conf.sample \
+    && echo "wal_level = logical" >> /usr/share/postgresql/postgresql.conf.sample \
+    && echo "max_replication_slots = 4" >> /usr/share/postgresql/postgresql.conf.sample \
+    && echo "max_wal_senders = 4" >> /usr/share/postgresql/postgresql.conf.sample
