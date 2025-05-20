@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import api from "../../api"; // Sua configuração do Axios
 
 const AuthContext = createContext();
@@ -25,12 +25,11 @@ export const AuthProvider = ({ children }) => {
             const token = localStorage.getItem("accessToken");
             const userData = JSON.parse(localStorage.getItem("userData"));
             const loginTime = localStorage.getItem("loginTime");
-            
+
             if (token && userData) {
-                // Verifica se o tempo da sessão expirou
                 const currentTime = new Date().getTime();
                 const sessionAge = currentTime - parseInt(loginTime || 0);
-                
+
                 if (sessionAge > SESSION_TIMEOUT) {
                     logout();
                     setLoading(false);
@@ -38,20 +37,19 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 try {
-                    // Verifica se o token ainda é válido fazendo uma requisição
-                    const response = await fetch("http://127.0.0.1:8000/api/user/", {
+                    // 🔁 Substitui o fetch por axios (api.js)
+                    const response = await api.get("/api/user/", {
                         headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json"
                         }
                     });
-                    
-                    if (response.ok) {
+
+                    if (response.status === 200) {
                         setIsAuthenticated(true);
                         setIsAdmin(userData.is_staff === true);
                         resetSessionTimer();
                     } else {
-                        // Se o token não for válido, faz logout
                         logout();
                     }
                 } catch (error) {
@@ -64,7 +62,6 @@ export const AuthProvider = ({ children }) => {
 
         checkAuth();
 
-        // Limpa o timer quando o componente é desmontado
         return () => {
             if (sessionTimer) clearTimeout(sessionTimer);
         };

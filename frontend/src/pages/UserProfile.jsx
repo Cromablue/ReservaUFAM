@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
+import api from "../api"; // ajuste o caminho conforme sua estrutura
 
 function UserProfile() {
   const [originalUser, setOriginalUser] = useState(null);
@@ -35,15 +36,9 @@ function UserProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/user/", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+        const response = await api.get("/api/user/");
+        const data = response.data;
 
-        if (!response.ok) throw new Error("Erro ao buscar perfil");
-        const data = await response.json();
-        
         const userData = {
           username: data.username || "",
           email: data.email || "",
@@ -57,7 +52,7 @@ function UserProfile() {
           role: data.role || "",
           is_staff: data.is_staff || false
         };
-        
+
         setUser(userData);
         setOriginalUser(userData);
       } catch (error) {
@@ -83,7 +78,6 @@ function UserProfile() {
 
   const formatCPF = (value) => {
     const numbers = value.replace(/\D/g, '').slice(0, 11);
-    
     if (numbers.length <= 3) return numbers;
     if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
     if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
@@ -92,7 +86,6 @@ function UserProfile() {
 
   const formatPhone = (value) => {
     const numbers = value.replace(/\D/g, '').slice(0, 11);
-    
     if (numbers.length <= 2) return numbers;
     if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
@@ -103,7 +96,6 @@ function UserProfile() {
   };
 
   const unformatValue = (value) => {
-    // Remove tudo que não é número
     return value.replace(/\D/g, '');
   };
 
@@ -122,16 +114,16 @@ function UserProfile() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'password' || name === 'confirmPassword') {
       const newUser = { ...user, [name]: value };
       setUser(newUser);
-      
+
       const errors = {
-        length: value.length >= 6,
-        hasUpper: /[A-Z]/.test(value),
-        hasLower: /[a-z]/.test(value),
-        hasNumber: /\d/.test(value),
+        length: newUser.password.length >= 6,
+        hasUpper: /[A-Z]/.test(newUser.password),
+        hasLower: /[a-z]/.test(newUser.password),
+        hasNumber: /\d/.test(newUser.password),
         match: newUser.password === newUser.confirmPassword
       };
       setPasswordErrors(errors);
@@ -167,8 +159,7 @@ function UserProfile() {
       setUser({ ...user, [name]: limitedValue });
     } else {
       setUser({ ...user, [name]: value });
-      
-      // Validação dos outros campos
+
       if (['siape'].includes(name)) {
         setFieldErrors({
           ...fieldErrors,
@@ -179,20 +170,15 @@ function UserProfile() {
   };
 
   const hasChanges = () => {
-    // Verifica se há alterações nos campos e se não há erros
     const hasFieldChanges = JSON.stringify(user) !== JSON.stringify(originalUser);
     const hasFieldErrors = Object.values(fieldErrors).some(error => error);
     const hasPasswordErrors = user.password && Object.values(passwordErrors).some(error => !error);
-    
     return hasFieldChanges && !hasFieldErrors && !hasPasswordErrors;
   };
 
   const canSendCode = () => {
-    // Verifica se todos os requisitos da senha foram atendidos
     const allPasswordRequirementsMet = !Object.values(passwordErrors).includes(false);
-    // Verifica se ambos os campos de senha estão preenchidos
     const bothPasswordFieldsFilled = user.password && user.confirmPassword;
-    
     return bothPasswordFieldsFilled && allPasswordRequirementsMet;
   };
 
@@ -208,28 +194,21 @@ function UserProfile() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/user/profile/", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify({
-          ...user,
-          password: showPasswordFields ? user.password : undefined
-        }),
-      });
+      const payload = {
+        ...user,
+        password: showPasswordFields ? user.password : undefined
+      };
 
-      if (!response.ok) throw new Error("Erro ao atualizar perfil");
+      const response = await api.patch("/api/user/profile/", payload);
+
       setMessage("Perfil atualizado com sucesso!");
-      
+
       if (showPasswordFields) {
         setUser(prev => ({ ...prev, password: "", confirmPassword: "" }));
         setShowPasswordFields(false);
       }
-      
-      // Atualiza o originalUser com os novos dados
-      setOriginalUser({...user, password: "", confirmPassword: ""});
+
+      setOriginalUser({ ...user, password: "", confirmPassword: "" });
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
       setMessage("Erro ao salvar alterações");
@@ -238,14 +217,7 @@ function UserProfile() {
 
   const handleSendEmailConfirmation = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/user/send-confirmation/", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Erro ao enviar email");
+      await api.post("/api/user/send-confirmation/");
       setMessage("Email de confirmação enviado com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar email:", error);
@@ -279,7 +251,7 @@ function UserProfile() {
             {message}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="">
+        <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-3 gap-4 mb-2">
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -445,51 +417,39 @@ function UserProfile() {
                     minLength={6}
                   />
                 </div>
-
-                {/* Requisitos da senha */}
-                <div className="text-sm space-y-1">
-                  <p className={passwordErrors.length ? 'text-green-600' : 'text-red-600'}>
-                    ✓ Mínimo de 6 caracteres
-                  </p>
-                  <p className={passwordErrors.hasUpper ? 'text-green-600' : 'text-red-600'}>
-                    ✓ Pelo menos uma letra maiúscula
-                  </p>
-                  <p className={passwordErrors.hasLower ? 'text-green-600' : 'text-red-600'}>
-                    ✓ Pelo menos uma letra minúscula
-                  </p>
-                  <p className={passwordErrors.hasNumber ? 'text-green-600' : 'text-red-600'}>
-                    ✓ Pelo menos um número
-                  </p>
-                  <p className={passwordErrors.match ? 'text-green-600' : 'text-red-600'}>
-                    ✓ Senhas coincidem
-                  </p>
-                </div>
-
-                <div className="flex gap-4 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleSendEmailConfirmation}
-                    disabled={!canSendCode()}
-                    className={`w-full font-bold py-2 px-4 rounded-lg transition-colors duration-300
-                      ${canSendCode() 
-                        ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                  >
-                    Enviar Código de Confirmação
-                  </button>
-                </div>
+                <ul className="text-xs text-gray-600 mt-2 space-y-1">
+                  <li className={passwordErrors.length ? "text-green-600" : "text-red-600"}>
+                    Mínimo de 6 caracteres
+                  </li>
+                  <li className={passwordErrors.hasUpper ? "text-green-600" : "text-red-600"}>
+                    Pelo menos uma letra maiúscula
+                  </li>
+                  <li className={passwordErrors.hasLower ? "text-green-600" : "text-red-600"}>
+                    Pelo menos uma letra minúscula
+                  </li>
+                  <li className={passwordErrors.hasNumber ? "text-green-600" : "text-red-600"}>
+                    Pelo menos um número
+                  </li>
+                  <li className={passwordErrors.match ? "text-green-600" : "text-red-600"}>
+                    As senhas coincidem
+                  </li>
+                </ul>
               </div>
             )}
           </div>
 
-          <div className="pt-4">
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={handleSendEmailConfirmation}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300"
+            >
+              Reenviar email de confirmação
+            </button>
             <button
               type="submit"
+              className={`bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded transition-colors duration-300 ${!hasChanges() ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={!hasChanges()}
-              className={`w-full font-bold py-3 px-4 rounded-lg transition-colors duration-300
-                ${hasChanges() 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
             >
               Salvar Alterações
             </button>

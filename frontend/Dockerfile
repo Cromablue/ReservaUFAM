@@ -21,3 +21,6 @@ EXPOSE 5173
 
 # Comando para rodar a aplicação no vite
 CMD ["npm", "run", "dev"]
+
+ARG API_URL
+ENV VITE_API_URL=$API_URL

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BackButton from "../components/BackButton";
 import MessagePopup from "../components/MessagePopup";
+import api from "../api";
 
 const resourceTranslations = {
     "auditorium": "Auditório",
@@ -21,33 +22,15 @@ const generateTimeOptions = () => {
 };
 
 const getFinalTimeOptions = (initialTime, initialDate, finalDate) => {
-    // Se não tiver horário inicial, retorna lista vazia
-    if (!initialTime) {
-        return [];
-    }
-
-    // Se não tiver as datas, retorna lista vazia
-    if (!initialDate || !finalDate) {
-        return [];
-    }
-
-    // Converte as datas para comparação
+    if (!initialTime || !initialDate || !finalDate) return [];
     const initialDateObj = new Date(initialDate);
     const finalDateObj = new Date(finalDate);
-
-    // Se as datas forem diferentes, retorna todos os horários
     if (initialDateObj.getTime() !== finalDateObj.getTime()) {
         return generateTimeOptions();
     }
-
-    // Se as datas são iguais, filtra os horários após o horário inicial
     const allOptions = generateTimeOptions();
     const initialTimeIndex = allOptions.findIndex(time => time === initialTime);
-
-    if (initialTimeIndex === -1) {
-        return [];
-    }
-
+    if (initialTimeIndex === -1) return [];
     return allOptions.slice(initialTimeIndex + 1);
 };
 
@@ -98,12 +81,9 @@ const CreateReservation = () => {
             navigate('/');
             return;
         }
-
-        // Carregar recursos quando o componente montar
         fetchResources();
     }, [isAuthenticated, navigate]);
 
-    // Carregar datas ocupadas quando um recurso for selecionado
     useEffect(() => {
         if (formData.resource_type && formData.resource_id) {
             fetchOccupiedDates();
@@ -123,33 +103,16 @@ const CreateReservation = () => {
     };
 
     const fetchResources = async () => {
-        const token = localStorage.getItem("accessToken");
-        const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
-
         try {
             const [auditoriumResponse, meetingRoomResponse, vehicleResponse] = await Promise.all([
-                fetch('http://127.0.0.1:8000/api/resources/auditoriums/', { headers }),
-                fetch('http://127.0.0.1:8000/api/resources/meeting-rooms/', { headers }),
-                fetch('http://127.0.0.1:8000/api/resources/vehicles/', { headers })
+                api.get('/api/resources/auditoriums/'),
+                api.get('/api/resources/meeting-rooms/'),
+                api.get('/api/resources/vehicles/')
             ]);
-
-            if (!auditoriumResponse.ok || !meetingRoomResponse.ok || !vehicleResponse.ok) {
-                throw new Error('Erro ao carregar recursos');
-            }
-
-            const [auditoriums, meetingRooms, vehicles] = await Promise.all([
-                auditoriumResponse.json(),
-                meetingRoomResponse.json(),
-                vehicleResponse.json()
-            ]);
-
             setResources({
-                auditorium: auditoriums,
-                meeting_room: meetingRooms,
-                vehicle: vehicles
+                auditorium: auditoriumResponse.data,
+                meeting_room: meetingRoomResponse.data,
+                vehicle: vehicleResponse.data
             });
         } catch (error) {
             console.error('Erro ao carregar recursos:', error);
@@ -159,18 +122,8 @@ const CreateReservation = () => {
 
     const fetchOccupiedDates = async () => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const response = await fetch(`http://127.0.0.1:8000/api/resources/occupied-dates/${formData.resource_type}/${formData.resource_id}/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) throw new Error('Erro ao carregar datas ocupadas');
-            
-            const data = await response.json();
-            setOccupiedDates(data);
+            const response = await api.get(`/api/resources/occupied-dates/${formData.resource_type}/${formData.resource_id}/`);
+            setOccupiedDates(response.data);
         } catch (error) {
             console.error('Erro ao carregar datas ocupadas:', error);
             handleError("Erro ao carregar disponibilidade do recurso");
@@ -181,29 +134,20 @@ const CreateReservation = () => {
         const { name, value } = e.target;
         const newFormData = { ...formData, [name]: value };
 
-        // Limpa o horário final apenas se a data inicial ou final for alterada
         if (name === 'initial_date' || name === 'final_date') {
-            console.log(`${name} alterado para ${value}, limpando horário final`);
             newFormData.final_time = '';
             newFormData.initial_time = '';
         }
-
-        // Se mudar o horário inicial, apenas limpa o horário final
         if (name === 'initial_time') {
-            console.log(`${name} alterado para ${value}`);
             newFormData.final_time = '';
         }
-
-        // Se mudar a data inicial, ajusta a data final se necessário
         if (name === 'initial_date' && newFormData.final_date < value) {
-            console.log('Ajustando data final para coincidir com data inicial');
             newFormData.final_date = value;
             newFormData.final_time = '';
         }
 
         setFormData(newFormData);
 
-        // Verifica se algum campo foi modificado em relação ao estado inicial
         const hasChanges = Object.keys(newFormData).some(
             key => newFormData[key] !== initialFormData[key]
         );
@@ -225,35 +169,23 @@ const CreateReservation = () => {
         if (!formModified) return;
 
         try {
-            const token = localStorage.getItem("accessToken");
-            if (!token) {
-                handleError("Sessão expirada. Por favor, faça login novamente.");
-                navigate('/');
-                return;
-            }
-
-            // Validações adicionais
             if (!formData.resource_type || !formData.resource_id) {
                 handleError("Por favor, selecione um recurso.");
                 return;
             }
-
             if (!formData.initial_date || !formData.final_date) {
                 handleError("Por favor, selecione as datas inicial e final.");
                 return;
             }
-
             if (!formData.initial_time || !formData.final_time) {
                 handleError("Por favor, selecione os horários inicial e final.");
                 return;
             }
-
             if (!formData.description.trim()) {
                 handleError("Por favor, forneça uma descrição para a reserva.");
                 return;
             }
 
-            // Prepara os dados da reserva
             const reservationData = {
                 initial_date: formData.initial_date,
                 final_date: formData.final_date,
@@ -264,9 +196,6 @@ const CreateReservation = () => {
                 resource_id: parseInt(formData.resource_id)
             };
 
-            console.log("Dados que serão enviados:", reservationData);
-
-            // Adiciona o campo correto do recurso
             switch (formData.resource_type) {
                 case 'auditorium':
                     reservationData.auditorium = parseInt(formData.resource_id);
@@ -281,37 +210,15 @@ const CreateReservation = () => {
                     throw new Error('Tipo de recurso inválido');
             }
 
-            console.log('Dados que serão enviados:', JSON.stringify(reservationData, null, 2));
+            const response = await api.post("/api/user/reservations/create/", reservationData);
 
-            const response = await fetch("http://127.0.0.1:8000/api/user/reservations/create/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(reservationData)
-            });
-
-            const responseText = await response.text();
-            console.log('Resposta bruta do servidor:', responseText);
-
-            let responseData;
-            try {
-                responseData = JSON.parse(responseText);
-                console.log('Resposta do servidor (parsed):', responseData);
-            } catch (e) {
-                console.log('Erro ao fazer parse da resposta');
-                throw new Error('Erro ao processar resposta do servidor');
-            }
-
-            if (!response.ok) {
+            if (response.status !== 201 && response.status !== 200) {
                 let errorMessage = 'Erro na resposta do servidor';
-                
-                if (responseData.detail) {
-                    errorMessage = responseData.detail;
-                } else if (typeof responseData === 'object') {
+                if (response.data?.detail) {
+                    errorMessage = response.data.detail;
+                } else if (typeof response.data === 'object') {
                     const errors = [];
-                    Object.entries(responseData).forEach(([key, value]) => {
+                    Object.entries(response.data).forEach(([key, value]) => {
                         if (Array.isArray(value)) {
                             errors.push(`${key}: ${value.join(', ')}`);
                         } else if (typeof value === 'string') {
@@ -322,13 +229,11 @@ const CreateReservation = () => {
                         errorMessage = errors.join('. ');
                     }
                 }
-                
                 throw new Error(errorMessage);
             }
 
             handleSuccess("Reserva criada com sucesso!");
-            
-            // Limpa o formulário
+
             setFormData({
                 resource_type: "",
                 resource_id: "",
@@ -340,7 +245,7 @@ const CreateReservation = () => {
             });
             setFormModified(false);
             setSelectedResource(null);
-            
+
         } catch (error) {
             console.error('Erro completo:', error);
             handleError(`Erro ao criar reserva: ${error.message}`);
@@ -390,7 +295,6 @@ const CreateReservation = () => {
                                                 ))}
                                             </select>
                                         </div>
-
                                         {formData.resource_type && (
                                             <div>
                                                 <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -403,10 +307,10 @@ const CreateReservation = () => {
                                                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
                                                     required
                                                 >
-                                                    <option value="">Selecione um recurso</option>
+                                                    <option value="">Selecione</option>
                                                     {resources[formData.resource_type]?.map(resource => (
                                                         <option key={resource.id} value={resource.id}>
-                                                            {resource.name || resource.model || resource.plate_number}
+                                                            {resource.name || resource.model}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -415,138 +319,98 @@ const CreateReservation = () => {
                                     </div>
                                 </div>
 
-                                {/* Seção de Data e Hora */}
-                                <div className="bg-gray-50 p-4 rounded-lg">
+                                {/* Seção de Datas e Horários */}
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-4">
                                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                                        Período da Reserva
+                                        Datas e Horários
                                     </h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                                    Data Inicial
-                                                </label>
-                                                <input 
-                                                    type="date" 
-                                                    name="initial_date" 
-                                                    value={formData.initial_date} 
-                                                    onChange={handleChange} 
-                                                    min={getMinDate()} 
-                                                    required 
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                                    Horário Inicial
-                                                </label>
-                                                <select 
-                                                    name="initial_time" 
-                                                    value={formData.initial_time} 
-                                                    onChange={handleChange} 
-                                                    required 
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                                                >
-                                                    <option value="">Selecione um horário</option>
-                                                    {timeOptions.map((time) => (
-                                                        <option key={time} value={time}>
-                                                            {time}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                        <div>
+                                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                                Data Inicial
+                                            </label>
+                                            <input
+                                                type="date"
+                                                name="initial_date"
+                                                min={getMinDate()}
+                                                value={formData.initial_date}
+                                                onChange={handleChange}
+                                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                                required
+                                            />
                                         </div>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                                    Data Final
-                                                </label>
-                                                <input 
-                                                    type="date" 
-                                                    name="final_date" 
-                                                    value={formData.final_date} 
-                                                    onChange={handleChange} 
-                                                    min={formData.initial_date || getMinDate()} 
-                                                    required 
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                                    Horário Final
-                                                </label>
-                                                <select 
-                                                    name="final_time" 
-                                                    value={formData.final_time} 
-                                                    onChange={handleChange} 
-                                                    required 
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                                                >
-                                                    <option value="">Selecione um horário</option>
-                                                    <option value="07:00">07:00</option>
-                                                    <option value="07:30">07:30</option>
-                                                    <option value="08:00">08:00</option>
-                                                    <option value="08:30">08:30</option>
-                                                    <option value="09:00">09:00</option>
-                                                    <option value="09:30">09:30</option>
-                                                    <option value="10:00">10:00</option>
-                                                    <option value="10:30">10:30</option>
-                                                    <option value="11:00">11:00</option>
-                                                    <option value="11:30">11:30</option>
-                                                    <option value="12:00">12:00</option>
-                                                    <option value="12:30">12:30</option>
-                                                    <option value="13:00">13:00</option>
-                                                    <option value="13:30">13:30</option>
-                                                    <option value="14:00">14:00</option>
-                                                    <option value="14:30">14:30</option>
-                                                    <option value="15:00">15:00</option>
-                                                    <option value="15:30">15:30</option>
-                                                    <option value="16:00">16:00</option>
-                                                    <option value="16:30">16:30</option>
-                                                    <option value="17:00">17:00</option>
-                                                    <option value="17:30">17:30</option>
-                                                    <option value="18:00">18:00</option>
-                                                    <option value="18:30">18:30</option>
-                                                    <option value="19:00">19:00</option>
-                                                    <option value="19:30">19:30</option>
-                                                    <option value="20:00">20:00</option>
-                                                    <option value="20:30">20:30</option>
-                                                    <option value="21:00">21:00</option>
-                                                    <option value="21:30">21:30</option>
-                                                    <option value="22:00">22:00</option>
-                                                    <option value="22:30">22:30</option>
-                                                </select>
-                                            </div>
+                                        <div>
+                                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                                Data Final
+                                            </label>
+                                            <input
+                                                type="date"
+                                                name="final_date"
+                                                min={formData.initial_date || getMinDate()}
+                                                value={formData.final_date}
+                                                onChange={handleChange}
+                                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                                Horário Inicial
+                                            </label>
+                                            <select
+                                                name="initial_time"
+                                                value={formData.initial_time}
+                                                onChange={handleChange}
+                                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                                required
+                                            >
+                                                <option value="">Selecione</option>
+                                                {timeOptions.map(time => (
+                                                    <option key={time} value={time}>{time}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                                Horário Final
+                                            </label>
+                                            <select
+                                                name="final_time"
+                                                value={formData.final_time}
+                                                onChange={handleChange}
+                                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                                required
+                                            >
+                                                <option value="">Selecione</option>
+                                                {getFinalTimeOptions(formData.initial_time, formData.initial_date, formData.final_date).map(time => (
+                                                    <option key={time} value={time}>{time}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Seção de Descrição */}
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                                        Detalhes da Reserva
-                                    </h2>
-                                    <div>
-                                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                                            Descrição
-                                        </label>
-                                        <textarea 
-                                            name="description" 
-                                            value={formData.description} 
-                                            onChange={handleChange} 
-                                            required 
-                                            rows="4"
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400"
-                                            placeholder="Descreva o propósito da reserva..."
-                                        />
-                                    </div>
+                                {/* Descrição */}
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                                        Descrição da Reserva
+                                    </label>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg"
+                                        placeholder="Descreva o motivo da reserva, necessidades especiais etc."
+                                        rows={4}
+                                        required
+                                    />
                                 </div>
 
                                 <div className="flex justify-end">
                                     <button
                                         type="submit"
                                         disabled={!formModified}
-                                        className={`font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-md
+                                        className={`font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md
                                             ${formModified 
                                                 ? 'bg-green-500 hover:bg-green-600 text-white hover:shadow-lg cursor-pointer' 
                                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
@@ -558,88 +422,22 @@ const CreateReservation = () => {
                         </div>
                     </div>
 
-                    {/* Painel Lateral */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {selectedResource ? (
-                            <>
-                                <div className="bg-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                                        Detalhes do Recurso
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {formData.resource_type === 'vehicle' ? (
-                                            <>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Modelo:</span>
-                                                    <span>{selectedResource.model}</span>
-                                                </div>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Placa:</span>
-                                                    <span>{selectedResource.plate_number}</span>
-                                                </div>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Capacidade:</span>
-                                                    <span>{selectedResource.capacity} pessoas</span>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Nome:</span>
-                                                    <span>{selectedResource.name}</span>
-                                                </div>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Local:</span>
-                                                    <span>{selectedResource.location}</span>
-                                                </div>
-                                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                                    <span className="font-medium w-24">Capacidade:</span>
-                                                    <span>{selectedResource.capacity} pessoas</span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="bg-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                                        Horários Ocupados
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {occupiedDates.length > 0 ? (
-                                            occupiedDates.map((date, index) => (
-                                                <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                                    <p className="font-medium text-gray-800">
-                                                        {new Date(date.date).toLocaleDateString()}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600 mt-1">
-                                                        {date.initial_time} - {date.final_time}
-                                                    </p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-gray-600 text-center py-4">
-                                                Nenhum horário ocupado
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="bg-white p-6 rounded-xl shadow-lg">
-                                <div className="text-center py-8">
-                                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <h3 className="mt-4 text-lg font-medium text-gray-900">
-                                        Selecione um recurso
-                                    </h3>
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        As informações de disponibilidade aparecerão aqui
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                    {/* Ocupação/Disponibilidade */}
+                    <div>
+                        <div className="bg-white p-4 rounded-xl shadow-lg">
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                                Datas Ocupadas
+                            </h2>
+                            {occupiedDates && occupiedDates.length > 0 ? (
+                                <ul className="list-disc list-inside text-gray-700">
+                                    {occupiedDates.map((date, idx) => (
+                                        <li key={idx}>{date}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-500">Nenhuma data ocupada para este recurso.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

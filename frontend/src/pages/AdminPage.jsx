@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../../api"; // importa o Axios configurado
 
 function AdminPage() {
   const [username, setUsername] = useState("");
@@ -9,16 +10,12 @@ function AdminPage() {
     const fetchUser = async () => {
       const token = localStorage.getItem("accessToken");
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/user/", {
+        const response = await api.get("/api/user/", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!response.ok) {
-          throw new Error('Erro ao carregar dados do administrador');
-        }
-        const userData = await response.json();
-        setUsername(userData.username);
+        setUsername(response.data.username);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
         setError("Não foi possível carregar os dados do administrador");
@@ -44,7 +41,7 @@ function AdminPage() {
         Painel Administrativo
       </h1>
       <h2 className="text-xl mb-4">Bem-vindo, {username}!</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
           <h3 className="font-semibold mb-2">Gerenciar Reservas</h3>

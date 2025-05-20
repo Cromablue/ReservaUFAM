@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../api"; // ajuste o caminho se necessário
 
 function AdminReservations() {
     const [reservations, setReservations] = useState({
@@ -19,23 +20,13 @@ function AdminReservations() {
             return;
         }
         fetchReservations();
+        // eslint-disable-next-line
     }, [isAuthenticated, isAdmin, navigate]);
 
     const fetchReservations = async () => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const response = await fetch("http://127.0.0.1:8000/api/admin/reservations/", {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao buscar reservas');
-            }
-
-            const data = await response.json();
+            const response = await api.get("/api/admin/reservations/");
+            const data = response.data;
 
             const pendentes = data.filter(res => res.status === 'Pendente');
             const aprovadas = data.filter(res => res.status === 'Aprovado');
@@ -52,20 +43,7 @@ function AdminReservations() {
 
     const handleStatusUpdate = async (reservationId, newStatus) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const response = await fetch(`http://127.0.0.1:8000/api/admin/reservations/${reservationId}/status/`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao atualizar status');
-            }
-
+            await api.patch(`/api/admin/reservations/${reservationId}/status/`, { status: newStatus });
             fetchReservations();
         } catch (error) {
             console.error('Erro:', error);
@@ -79,11 +57,21 @@ function AdminReservations() {
                 <div className="flex-1">
                     <h3 className="font-semibold text-lg text-gray-800">Reserva #{reservation.id}</h3>
                     <div className="mt-2 space-y-1 text-sm">
-                        <p><span className="font-medium text-gray-700">Recurso:</span> {reservation.auditorium?.name || reservation.meeting_room?.name || reservation.vehicle?.model}</p>
-                        <p><span className="font-medium text-gray-700">Solicitante:</span> {reservation.user?.username}</p>
-                        <p><span className="font-medium text-gray-700">Data Inicial:</span> {new Date(reservation.initial_date).toLocaleDateString()}</p>
-                        <p><span className="font-medium text-gray-700">Data Final:</span> {new Date(reservation.final_date).toLocaleDateString()}</p>
-                        <p><span className="font-medium text-gray-700">Horário:</span> {reservation.initial_time} - {reservation.final_time}</p>
+                        <p>
+                            <span className="font-medium text-gray-700">Recurso:</span> {reservation.auditorium?.name || reservation.meeting_room?.name || reservation.vehicle?.model}
+                        </p>
+                        <p>
+                            <span className="font-medium text-gray-700">Solicitante:</span> {reservation.user?.username}
+                        </p>
+                        <p>
+                            <span className="font-medium text-gray-700">Data Inicial:</span> {new Date(reservation.initial_date).toLocaleDateString()}
+                        </p>
+                        <p>
+                            <span className="font-medium text-gray-700">Data Final:</span> {new Date(reservation.final_date).toLocaleDateString()}
+                        </p>
+                        <p>
+                            <span className="font-medium text-gray-700">Horário:</span> {reservation.initial_time} - {reservation.final_time}
+                        </p>
                         <p>
                             <span className="font-medium text-gray-700">Status:</span>
                             <span className={`ml-1 px-2 py-1 rounded-full text-xs ${

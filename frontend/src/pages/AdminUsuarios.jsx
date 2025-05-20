@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MessagePopup from '../components/MessagePopup';
+import api from '../api'; // ajuste o caminho conforme sua estrutura
 
 function AdminUsuarios() {
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -14,21 +15,10 @@ function AdminUsuarios() {
   }, []);
 
   const fetchUsuarios = async () => {
-    const token = localStorage.getItem("accessToken");
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/admin/users/', { headers });
+      const response = await api.get('/api/admin/users/');
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error('HTTP error! status: ' + response.status);
-      }
-
-      const data = await response.json();
-      
       const pendentes = data.filter(user => user.status === 'Pendente')
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       const aprovados = data.filter(user => user.status === 'Aprovado')
@@ -61,18 +51,7 @@ function AdminUsuarios() {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/users/${userId}/status/`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (!response.ok) throw new Error('Erro ao atualizar status do usuário');
-
+      await api.patch(`/api/admin/users/${userId}/status/`, { status: newStatus });
       handleSuccess(`Usuário ${newStatus.toLowerCase()} com sucesso!`);
       fetchUsuarios();
     } catch (error) {

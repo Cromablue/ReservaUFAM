@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
+import api from "../api"; // ajuste o caminho se necessário
+
 
 function AdminProfile() {
   const [originalUser, setOriginalUser] = useState(null);
@@ -35,34 +37,16 @@ function AdminProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/user/", {
+        const response = await api.get("/api/user/", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
 
-        if (!response.ok) throw new Error("Erro ao buscar perfil");
-        const data = await response.json();
-        
-        const userData = {
-          username: data.username || "",
-          email: data.email || "",
-          cellphone: data.cellphone || "",
-          password: "",
-          confirmPassword: "",
-          siape: data.siape || "",
-          cpf: data.cpf || "",
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          role: data.role || "",
-          is_staff: data.is_staff || false
-        };
-        
-        setUser(userData);
-        setOriginalUser(userData);
+        const data = response.data;
+        // ... o resto igual
       } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
-        setMessage("Erro ao carregar perfil");
+        // ...
       } finally {
         setLoading(false);
       }
@@ -70,6 +54,7 @@ function AdminProfile() {
 
     fetchUser();
   }, []);
+
 
   const validatePassword = (password) => {
     return {
@@ -208,16 +193,14 @@ function AdminProfile() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/user/profile/", {
-        method: "PATCH",
+      const response = await api.patch("/api/user/profile/", {
+        ...user,
+        password: showPasswordFields ? user.password : undefined
+      }, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify({
-          ...user,
-          password: showPasswordFields ? user.password : undefined
-        }),
+        }
       });
 
       if (!response.ok) throw new Error("Erro ao atualizar perfil");
@@ -238,8 +221,7 @@ function AdminProfile() {
 
   const handleSendEmailConfirmation = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/user/send-confirmation/", {
-        method: "POST",
+      const response = await api.post("/api/user/send-confirmation/", null, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

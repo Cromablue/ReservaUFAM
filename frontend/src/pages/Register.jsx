@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import MessagePopup from "../components/MessagePopup";
+import api from "../api"; // ajuste o caminho conforme sua estrutura
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,7 +16,8 @@ const Register = () => {
     email: "",
     cellphone: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    role: "PROFESSOR"
   });
 
   const [showPassword, setShowPassword] = useState({
@@ -143,7 +145,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       setMessage({
         text: "Por favor, corrija os erros no formulário antes de continuar.",
@@ -155,24 +157,17 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          siape: formData.siape.replace(/\D/g, ""),
-          cpf: formData.cpf.replace(/\D/g, ""),
-          cellphone: formData.cellphone.replace(/\D/g, "")
-        }),
+      const response = await api.post("/api/register/", {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        siape: formData.siape.replace(/\D/g, ""),
+        cpf: formData.cpf.replace(/\D/g, ""),
+        cellphone: formData.cellphone.replace(/\D/g, ""),
+        role: formData.role
       });
-
-      if (!response.ok) {
-        throw new Error("Erro ao registrar usuário");
-      }
 
       setMessage({
         text: "Cadastro realizado com sucesso! Aguarde a aprovação do administrador. Você receberá um email quando seu cadastro for aprovado.",
@@ -183,8 +178,23 @@ const Register = () => {
         navigate("/");
       }, 5000);
     } catch (error) {
+      let errorMsg = "Erro ao realizar cadastro. Por favor, tente novamente.";
+      if (error.response?.data) {
+        // Mostra o primeiro erro retornado pela API, se houver
+        const data = error.response.data;
+        if (typeof data === "string") {
+          errorMsg = data;
+        } else if (typeof data === "object") {
+          const firstKey = Object.keys(data)[0];
+          if (Array.isArray(data[firstKey])) {
+            errorMsg = data[firstKey][0];
+          } else if (typeof data[firstKey] === "string") {
+            errorMsg = data[firstKey];
+          }
+        }
+      }
       setMessage({
-        text: "Erro ao realizar cadastro. Por favor, tente novamente.",
+        text: errorMsg,
         type: "error"
       });
     } finally {
@@ -208,13 +218,20 @@ const Register = () => {
           </svg>
         </a>
       </div>
-
       <img src={logo} alt="logo" className="w-17 h-12" />
 
       <div className="border border-gray-300 rounded-xl p-8 w-full max-w-2xl shadow-lg bg-white">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-green-500 to-blue-500 text-transparent bg-clip-text mb-2">
           Cadastro
         </h2>
+
+        {message.text && (
+          <MessagePopup
+            message={message.text}
+            type={message.type}
+            onClose={() => setMessage({ text: "", type: "" })}
+          />
+        )}
 
         <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-3">
           {/* Nome */}
@@ -232,7 +249,6 @@ const Register = () => {
             />
             {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
           </div>
-
           {/* Sobrenome */}
           <div>
             <label className="block font-medium mb-1">Sobrenome:</label>
@@ -248,7 +264,6 @@ const Register = () => {
             />
             {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
           </div>
-
           {/* Nome de Usuário */}
           <div>
             <label className="block font-medium mb-1">Nome de Usuário:</label>
@@ -264,7 +279,6 @@ const Register = () => {
             />
             {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
           </div>
-
           {/* Email */}
           <div className="col-span-2">
             <label className="block font-medium mb-1">Email:</label>
@@ -280,7 +294,6 @@ const Register = () => {
             />
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
-
           {/* Cargo */}
           <div className="mb-2">
             <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -296,7 +309,6 @@ const Register = () => {
               <option value="TECHNICIAN">Técnico</option>
             </select>
           </div>
-
           {/* SIAPE */}
           <div>
             <label className="block font-medium mb-1">SIAPE:</label>
@@ -312,7 +324,6 @@ const Register = () => {
             />
             {errors.siape && <p className="text-red-500 text-sm mt-1">{errors.siape}</p>}
           </div>
-
           {/* CPF */}
           <div>
             <label className="block font-medium mb-1">CPF:</label>
@@ -328,7 +339,6 @@ const Register = () => {
             />
             {errors.cpf && <p className="text-red-500 text-sm mt-1">{errors.cpf}</p>}
           </div>
-
           {/* Telefone */}
           <div>
             <label className="block font-medium mb-1">Telefone:</label>
@@ -344,10 +354,8 @@ const Register = () => {
             />
             {errors.cellphone && <p className="text-red-500 text-sm mt-1">{errors.cellphone}</p>}
           </div>
-
           {/* Divisor */}
           <div className="col-span-3 h-px bg-gray-200"></div>
-
           {/* Senha */}
           <div>
             <label className="block font-medium mb-1">Senha:</label>
@@ -366,6 +374,7 @@ const Register = () => {
                 type="button"
                 onClick={() => togglePasswordVisibility("password")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                tabIndex={-1}
               >
                 {showPassword.password ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -382,7 +391,6 @@ const Register = () => {
             </div>
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
           </div>
-
           {/* Confirmar Senha */}
           <div>
             <label className="block font-medium mb-1">Confirmar Senha:</label>
@@ -401,6 +409,7 @@ const Register = () => {
                 type="button"
                 onClick={() => togglePasswordVisibility("confirmPassword")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                tabIndex={-1}
               >
                 {showPassword.confirmPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -417,32 +426,18 @@ const Register = () => {
             </div>
             {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
-
-          {/* Botão de Cadastrar */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="col-span-3 bg-green-600 text-white p-3 rounded-lg font-semibold w-full hover:bg-green-700 transition disabled:bg-green-400 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Cadastrando...
-              </div>
-            ) : (
-              "Cadastrar"
-            )}
-          </button>
+          {/* Botão de envio */}
+          <div className="col-span-3 flex justify-center mt-4">
+            <button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-md transition-colors"
+              disabled={loading}
+            >
+              {loading ? "Enviando..." : "Cadastrar"}
+            </button>
+          </div>
         </form>
       </div>
-
-      {message.text && (
-        <MessagePopup
-          message={message.text}
-          type={message.type}
-          onClose={() => setMessage({ text: "", type: "" })}
-        />
-      )}
     </section>
   );
 };

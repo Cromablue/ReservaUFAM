@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MessagePopup from '../components/MessagePopup';
+import api from "../api"; // ajuste o caminho se necessário
 
 function AdminRecursos() {
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -24,31 +25,18 @@ function AdminRecursos() {
   }, []);
 
   const fetchResources = async () => {
-    const token = localStorage.getItem("accessToken");
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-
     try {
+      // Como o token será injetado automaticamente via interceptor, não precisa passar headers aqui
       const [auditoriumResponse, meetingRoomResponse, vehicleResponse] = await Promise.all([
-        fetch('http://127.0.0.1:8000/api/auditorium-admin/', { headers }),
-        fetch('http://127.0.0.1:8000/api/meeting-room-admin/', { headers }),
-        fetch('http://127.0.0.1:8000/api/vehicle-admin/', { headers })
+        api.get('/api/auditorium-admin/'),
+        api.get('/api/meeting-room-admin/'),
+        api.get('/api/vehicle-admin/')
       ]);
 
-      if (!auditoriumResponse.ok || !meetingRoomResponse.ok || !vehicleResponse.ok) {
-        throw new Error('HTTP error! status: ' + auditoriumResponse.status + ', ' + meetingRoomResponse.status + ', ' + vehicleResponse.status);
-      }
-
-      const auditoriumData = await auditoriumResponse.json();
-      const meetingRoomData = await meetingRoomResponse.json();
-      const vehicleData = await vehicleResponse.json();
-
       setResources({
-        auditorium: auditoriumData,
-        meeting_room: meetingRoomData,
-        vehicle: vehicleData
+        auditorium: auditoriumResponse.data,
+        meeting_room: meetingRoomResponse.data,
+        vehicle: vehicleResponse.data
       });
     } catch (error) {
       console.error('Erro ao carregar recursos:', error);
@@ -79,20 +67,8 @@ function AdminRecursos() {
     if (!formModified) return;
 
     try {
-      const token = localStorage.getItem("accessToken");
       const resourceType = selectedType === 'meeting_room' ? 'meeting-room-admin' : `${selectedType}-admin`;
-      const endpoint = `http://127.0.0.1:8000/api/${resourceType}/`;
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newResource)
-      });
-
-      if (!response.ok) throw new Error('Erro ao adicionar recurso');
+      const response = await api.post(`/api/${resourceType}/`, newResource);
 
       handleSuccess("Recurso adicionado com sucesso!");
       fetchResources();
@@ -105,31 +81,20 @@ function AdminRecursos() {
       });
       setFormModified(false);
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao adicionar recurso:', error);
       handleError("Erro ao adicionar recurso");
     }
   };
 
   const handleDelete = async (id, type) => {
     try {
-      const token = localStorage.getItem("accessToken");
       const resourceType = type === 'meeting_room' ? 'meeting-room-admin' : `${type}-admin`;
-      const endpoint = `http://127.0.0.1:8000/api/${resourceType}/${id}/`;
-      
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Erro ao remover recurso');
+      await api.delete(`/api/${resourceType}/${id}/`);
 
       handleSuccess("Recurso removido com sucesso!");
       fetchResources();
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao remover recurso:', error);
       handleError("Erro ao remover recurso");
     }
   };
@@ -276,6 +241,7 @@ function AdminRecursos() {
                     <button
                       onClick={() => handleDelete(resource.id, 'auditorium')}
                       className="text-red-500 hover:text-red-700"
+                      aria-label="Remover auditório"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -306,6 +272,7 @@ function AdminRecursos() {
                     <button
                       onClick={() => handleDelete(resource.id, 'meeting_room')}
                       className="text-red-500 hover:text-red-700"
+                      aria-label="Remover sala de reunião"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -336,6 +303,7 @@ function AdminRecursos() {
                     <button
                       onClick={() => handleDelete(resource.id, 'vehicle')}
                       className="text-red-500 hover:text-red-700"
+                      aria-label="Remover veículo"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
