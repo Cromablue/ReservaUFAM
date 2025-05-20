@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -10,7 +9,8 @@ export default defineConfig({
     },
     host: true,
     strictPort: true,
-    port: 5173
+    port: 5173,
+    allowedHosts: ['reservaufam.lab.local'] 
   },
   base: "/",
 })
