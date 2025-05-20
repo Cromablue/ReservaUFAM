@@ -9,7 +9,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: setup.settings
     env_file:
-      - .env.backend
+      - .env
     depends_on:
       db:
         condition: service_healthy
