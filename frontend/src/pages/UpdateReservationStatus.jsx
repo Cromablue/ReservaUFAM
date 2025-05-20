@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../api"; // ajuste o caminho conforme sua estrutura
+import api from "../../api"; // ajuste o caminho conforme sua estrutura
 
 function UpdateReservationStatus() {
   const { id } = useParams();

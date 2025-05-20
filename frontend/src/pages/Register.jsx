@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import MessagePopup from "../components/MessagePopup";
-import api from "../api"; // ajuste o caminho conforme sua estrutura
+import api from "../../api"; // ajuste o caminho conforme sua estrutura
 
 const Register = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../api"; // ajuste o caminho conforme sua estrutura
+import api from "../../api"; // ajuste o caminho conforme sua estrutura
 
 function Home() {
   const [reservations, setReservations] = useState([]);

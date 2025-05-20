@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
-import api from "../api"; // ajuste o caminho conforme sua estrutura
+import api from "../../api"; // ajuste o caminho conforme sua estrutura
 
 function UserProfile() {
   const [originalUser, setOriginalUser] = useState(null);

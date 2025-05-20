@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
-import api from "../api"; // ajuste o caminho se necessário
+import api from "../../api"; // ajuste o caminho se necessário
 
 
 function AdminProfile() {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BackButton from "../components/BackButton";
 import MessagePopup from "../components/MessagePopup";
-import api from "../api";
+import api from "../../api";
 
 const resourceTranslations = {
     "auditorium": "Auditório",

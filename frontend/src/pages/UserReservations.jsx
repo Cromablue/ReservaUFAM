@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BackButton from "../components/BackButton";
-import api from "../api"; // ajuste o caminho conforme sua estrutura
+import api from "../../api"; // ajuste o caminho conforme sua estrutura
 
 function UserReservations() {
   const [reservations, setReservations] = useState([]);
