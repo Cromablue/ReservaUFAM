@@ -9,7 +9,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: setup.settings
     env_file:
-      - .env
+      - .env.backend
     depends_on:
       db:
         condition: service_healthy
@@ -29,6 +29,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - VITE_API_URL=${API_URL}
+    env_file:
+      - ./frontend/.env.frontend
     depends_on:
       - backend
 
