@@ -18,8 +18,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg ma
 # Copia o script de configuração para dentro do container
 COPY ./docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
 
-# Configura postgresql.conf para replicação lógica
+# Configura postgresql.conf para replicação lógica e conexões externas
 RUN echo "shared_preload_libraries = 'pglogical'" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "wal_level = logical" >> /usr/share/postgresql/postgresql.conf.sample \
     && echo "max_replication_slots = 4" >> /usr/share/postgresql/postgresql.conf.sample \
-    && echo "max_wal_senders = 4" >> /usr/share/postgresql/postgresql.conf.sample
+    && echo "max_wal_senders = 4" >> /usr/share/postgresql/postgresql.conf.sample \
+    && echo "listen_addresses = '*'" >> /usr/share/postgresql/postgresql.conf.sample
