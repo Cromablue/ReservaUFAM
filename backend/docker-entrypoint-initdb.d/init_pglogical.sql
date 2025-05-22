@@ -20,10 +20,10 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO replicator;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO replicator;
 
--- Criação do node lógico do servidor 1
+-- Para o servidor 2
 SELECT pglogical.create_node(
-    node_name := 'servidor1_node',
-    dsn := 'host=192.168.1.93 port=5432 dbname=reserve_database user=replicator password=replicator_password'
+    node_name := 'servidor2_node',
+    dsn := 'host=192.168.1.216 port=5432 dbname=reserve_database user=replicator password=replicator_password'
 );
 
 -- Criação do replication set
