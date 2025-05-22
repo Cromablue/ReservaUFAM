@@ -23,3 +23,16 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO replicator;
 -- Permite acesso a futuras tabelas automaticamente
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO replicator;
+
+-- Cria o node lógico
+SELECT pglogical.create_node(
+    node_name := 'servidor1_node',
+    dsn := 'host=reservaufam_db port=5432 dbname=your_database user=replicator password=replicator_password'
+);
+
+-- Cria a replication set com tabelas específicas (exemplo)
+SELECT pglogical.create_replication_set('default', true, true, false, true);
+
+-- Adiciona tabelas à replication set
+SELECT pglogical.replication_set_add_table('default', 'reserve_reservation', true);
+SELECT pglogical.replication_set_add_table('default', 'reserve_customuser', true);
