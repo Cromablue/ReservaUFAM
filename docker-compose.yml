@@ -15,12 +15,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    dns:
+      - 192.168.0.39  # ← IP do servidor BIND9
 
   frontend:
     build:
       context: ./frontend
       args:
-        API_URL: ${API_URL}  # corrigido aqui
+        API_URL: ${API_URL}
     container_name: reservaufam_frontend
     ports:
       - "5173:5173"
@@ -30,11 +32,13 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
-      - VITE_API_URL=${API_URL}  # mantenha aqui ou no .env.frontend, não em ambos
+      - VITE_API_URL=${API_URL}
     env_file:
       - .env.frontend
     depends_on:
       - backend
+    dns:
+      - 192.168.0.39  # ← resolve nomes via BIND
 
   db:
     build:
@@ -57,6 +61,8 @@ services:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_NAME}"]
       interval: 10s
       retries: 5
+    dns:
+      - 192.168.0.39  # ← resolve DNS local para replicação
 
 volumes:
   postgres_data:
