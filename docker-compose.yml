@@ -17,6 +17,8 @@ services:
         condition: service_healthy
     dns:
       - 192.168.0.39  # ← IP do servidor BIND9
+    networks:
+      - reservanet
 
   frontend:
     build:
@@ -38,7 +40,9 @@ services:
     depends_on:
       - backend
     dns:
-      - 192.168.0.39  # ← resolve nomes via BIND
+      - 192.168.0.39
+    networks:
+      - reservanet
 
   db:
     build:
@@ -63,7 +67,13 @@ services:
       interval: 10s
       retries: 5
     dns:
-      - 192.168.0.39  # ← resolve DNS local para replicação
+      - 192.168.0.39
+    networks:
+      - reservanet
 
 volumes:
   postgres_data:
+
+networks:
+  reservanet:
+    driver: bridge
