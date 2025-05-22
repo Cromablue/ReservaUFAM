@@ -1,7 +1,7 @@
--- Ativar extensão
+-- Ativa a extensão
 CREATE EXTENSION IF NOT EXISTS pglogical;
 
--- Criação do replicator
+-- Criação do replicator (apenas uma vez)
 DO $$
 BEGIN
    IF NOT EXISTS (
@@ -20,15 +20,21 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO replicator;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO replicator;
 
--- Criar o node lógico (servidor primário)
+-- Criação do node lógico do servidor 1
 SELECT pglogical.create_node(
     node_name := 'servidor1_node',
-    dsn := 'host=reservaufam_db port=5432 dbname=reserve_database user=replicator password=replicator_password'
+    dsn := 'host=192.168.1.93 port=5432 dbname=reserve_database user=replicator password=replicator_password'
 );
 
--- Cria a replication set
-SELECT pglogical.create_replication_set('default', true, true, false, true);
+-- Criação do replication set
+SELECT pglogical.create_replication_set(
+    set_name := 'default', 
+    replicate_insert := true, 
+    replicate_update := true, 
+    replicate_delete := true, 
+    replicate_truncate := true
+);
 
--- Adiciona tabelas específicas
+-- Adiciona as tabelas ao replication set
 SELECT pglogical.replication_set_add_table('default', 'reserve_reservation', true);
 SELECT pglogical.replication_set_add_table('default', 'reserve_customuser', true);
