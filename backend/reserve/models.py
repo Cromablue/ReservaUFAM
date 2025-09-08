@@ -20,6 +20,8 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("status", "Aprovado")
 
         extra_fields.setdefault('siape', f"ADM{self.model.objects.count() + 1}")
         extra_fields.setdefault('cpf', f"000000000{self.model.objects.count() + 1}"[-11:])
