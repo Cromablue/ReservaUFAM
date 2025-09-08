@@ -20,9 +20,6 @@ from .serializers import (
     CustomUserSerializer, ReservationSerializer, LoginSerializer
 )
 
-def index(request):
-    return JsonResponse({'message': 'Ola do Django!'})
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)

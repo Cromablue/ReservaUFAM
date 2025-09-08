@@ -23,7 +23,6 @@ from .views import (
 from rest_framework_simplejwt import views as jwt_views
 
 urlpatterns = [
-    path('', views.index, name='index'),
     path('register/', RegisterView.as_view(), name='register'),
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
